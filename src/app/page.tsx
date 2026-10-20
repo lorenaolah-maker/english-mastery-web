@@ -27,7 +27,65 @@ export default function Home() {
   // Focus Audio Ambiental (Generador de Lluvia y Sonido Blanco Web Audio)
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const audioCtxRef = useRef<AudioContext | null>(null);
-  const noiseNodeRef = useRef<AudioNode | null>(null);
+
+  // Web Audio Context compartido para los efectos táctiles de los botones
+  const sfxCtxRef = useRef<AudioContext | null>(null);
+
+  const getSfxContext = () => {
+    if (!sfxCtxRef.current) {
+      const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      sfxCtxRef.current = new AudioCtx();
+    }
+    if (sfxCtxRef.current.state === 'suspended') {
+      sfxCtxRef.current.resume();
+    }
+    return sfxCtxRef.current;
+  };
+
+  // Sonido suave de burbuja para botones generales
+  const playPopSound = () => {
+    try {
+      const ctx = getSfxContext();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(420, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(840, ctx.currentTime + 0.08);
+
+      gain.gain.setValueAtTime(0.12, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start();
+      osc.stop(ctx.currentTime + 0.09);
+    } catch {}
+  };
+
+  // Sonido brillante de campanita para aciertos y celebraciones
+  const playChimeSound = () => {
+    try {
+      const ctx = getSfxContext();
+      [523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.06);
+
+        gain.gain.setValueAtTime(0.1, ctx.currentTime + idx * 0.06);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + idx * 0.06 + 0.25);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start(ctx.currentTime + idx * 0.06);
+        osc.stop(ctx.currentTime + idx * 0.06 + 0.26);
+      });
+    } catch {}
+  };
 
   // Frase inspiracional
   const [quoteIdx, setQuoteIdx] = useState(0);
@@ -84,6 +142,7 @@ export default function Home() {
 
   // Manejo de sonido ambiental de lluvia
   const toggleFocusAudio = () => {
+    playPopSound();
     if (isAudioPlaying) {
       if (audioCtxRef.current) {
         audioCtxRef.current.close();
@@ -119,7 +178,6 @@ export default function Home() {
         gainNode.connect(ctx.destination);
 
         whiteNoise.start();
-        noiseNodeRef.current = whiteNoise;
         setIsAudioPlaying(true);
         showSaveNotice('🌧️ Sonido de lluvia suave activado para tu concentración');
       } catch {
@@ -130,6 +188,7 @@ export default function Home() {
 
   // Función de voz nativa optimizada para Safari en iPadOS
   const speakEnglish = (text: string) => {
+    playPopSound();
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       try {
         window.speechSynthesis.resume();
@@ -294,12 +353,14 @@ export default function Home() {
         copy[0] = true;
         return copy;
       });
+      playChimeSound();
       showSaveNotice(`🎉 ¡Sesión de ${pomoMinutes}m completada! +${earnedXp} XP y +2 💧 Gotitas.`);
     }
     return () => clearInterval(timer);
   }, [isRunning, timeLeft, pomoMinutes]);
 
   const handleStartTimer = (mins: number) => {
+    playPopSound();
     setPomoMinutes(mins);
     setTimeLeft(mins * 60);
     setIsRunning(true);
@@ -315,16 +376,19 @@ export default function Home() {
 
   const handleWaterPlant = () => {
     if (waterDrops > 0) {
+      playChimeSound();
       setWaterDrops(prev => prev - 1);
       setPlantStage(prev => (prev < 5 ? prev + 1 : 1));
       setXp(prev => prev + 25);
       showSaveNotice(`💧 ¡Regaste tu planta! +25 XP ✨ Vitalidad al 100%`);
     } else {
+      playPopSound();
       showSaveNotice('🌧️ Necesitas gotitas de agua. Completa un Pomodoro o domina flashcards para ganar más.');
     }
   };
 
   const handleAnalyzeSpeaking = () => {
+    playPopSound();
     if (!speakingText.trim()) return;
     setAnalyzing(true);
     setTimeout(() => {
@@ -334,11 +398,13 @@ export default function Home() {
       setAnalyzing(false);
       setXp(prev => prev + 50);
       setWaterDrops(prev => prev + 1);
+      playChimeSound();
       showSaveNotice('💖 ¡Speaking corregido con IA! +50 XP y +1 💧');
     }, 1200);
   };
 
   const handleAnalyzeWriting = () => {
+    playPopSound();
     if (!writingText.trim()) return;
     setIsWritingAnalyzing(true);
     setTimeout(() => {
@@ -348,6 +414,7 @@ export default function Home() {
       setIsWritingAnalyzing(false);
       setXp(prev => prev + 60);
       setWaterDrops(prev => prev + 1);
+      playChimeSound();
       showSaveNotice('📖 ¡Escrito analizado y guardado! +60 XP y +1 💧');
     }, 1200);
   };
@@ -359,10 +426,13 @@ export default function Home() {
 
   const handleClaimReward = () => {
     if (questPomo && questCards && questListening && !questClaimed) {
+      playChimeSound();
       setQuestClaimed(true);
       setXp(prev => prev + 100);
       setWaterDrops(prev => prev + 3);
       showSaveNotice('🎁 ¡Cofre diario desbloqueado! +100 XP y +3 💧 Gotitas de Agua');
+    } else {
+      playPopSound();
     }
   };
 
@@ -371,13 +441,17 @@ export default function Home() {
     setSelectedAnswer(option.text);
     setIsAnswerCorrect(option.correct);
     if (option.correct) {
+      playChimeSound();
       setXp(prev => prev + 30);
       setWaterDrops(prev => prev + 1);
       showSaveNotice('🎉 ¡Correcto! +30 XP y +1 💧');
+    } else {
+      playPopSound();
     }
   };
 
   const handleNextQuiz = () => {
+    playPopSound();
     setSelectedAnswer(null);
     setIsAnswerCorrect(null);
     setCurrentQuizIdx(prev => (prev + 1) % quizList.length);
@@ -387,7 +461,6 @@ export default function Home() {
 
   return (
     <div className="flex min-h-screen bg-[#FBF6EF] text-[#4A4139] font-sans antialiased selection:bg-[#FFD1DC]">
-      {/* ESTILOS DE RELIEVE Y SOMBRAS 3D CLAY */}
       <style jsx global>{`
         .clay-card-big {
           background: #FFFFFF;
@@ -436,10 +509,9 @@ export default function Home() {
         }
       `}</style>
 
-      {/* BARRA LATERAL SALVIA CLAY */}
+      {/* BARRA LATERAL SALVIA */}
       <aside className="w-76 shrink-0 bg-[#E3EFEA] p-5 flex flex-col justify-between border-r border-[#D3E3DD] shadow-[6px_0_24px_rgba(180,200,195,0.18)]">
         <div>
-          {/* AVATAR */}
           <div className="clay-card-big p-3.5 mb-5 flex items-center gap-3 bg-[#FFFFFF]/90">
             <div className="relative w-14 h-14 rounded-[22px] p-1 bg-[#E3EFEA] clay-icon-big flex items-center justify-center shrink-0">
               <div className="w-full h-full rounded-[18px] overflow-hidden bg-[#FFD6DE] flex items-center justify-center font-bold text-[#A84A60]">
@@ -468,7 +540,6 @@ export default function Home() {
             </div>
           </div>
 
-          {/* MENÚ */}
           <nav className="space-y-2">
             {[
               { id: 'pomodoro', label: 'Dashboard & Focus', icon: '⏱️', badge: '15-20m', bg: 'bg-[#FFD6DE]' },
@@ -485,7 +556,10 @@ export default function Home() {
               return (
                 <button
                   key={item.id}
-                  onClick={() => setActiveTab(item.id)}
+                  onClick={() => {
+                    playPopSound();
+                    setActiveTab(item.id);
+                  }}
                   className={`w-full flex items-center justify-between px-3 py-2 rounded-[22px] text-xs font-black transition-all ${
                     active
                       ? 'clay-pill-active text-[#3A322C]'
@@ -509,7 +583,6 @@ export default function Home() {
           </nav>
         </div>
 
-        {/* ACCESO A GOODNOTES */}
         <div className="pt-3 border-t border-[#D3E3DD]">
           <div className="clay-card-big p-4 bg-gradient-to-br from-[#FFF0F3] via-[#FFD6DE] to-[#FFC2D1] border-2 border-[#FFB3C6] flex flex-col items-center text-center relative overflow-hidden">
             <div className="w-12 h-12 rounded-2xl bg-[#FFE4EB] clay-icon-big flex items-center justify-center text-xl mb-1 shadow-inner">
@@ -519,6 +592,7 @@ export default function Home() {
             <p className="text-[10px] text-[#7A3345] font-semibold mb-2.5">Apuntes en Goodnotes</p>
             <a
               href="goodnotes://"
+              onClick={playPopSound}
               className="w-full py-2.5 rounded-[18px] clay-btn-pink text-xs font-black text-center flex items-center justify-center gap-1.5"
             >
               <span>📖</span> Abrir Goodnotes <span>↗</span>
@@ -529,7 +603,6 @@ export default function Home() {
 
       {/* CONTENIDO PRINCIPAL */}
       <main className="flex-1 p-6 md:p-8 max-w-4xl mx-auto overflow-y-auto">
-        {/* TOAST FLOTANTE */}
         {savedNotice && (
           <div className="fixed top-5 right-5 z-50 clay-card-big bg-[#D9EBD9] text-[#1B4332] font-black text-xs px-5 py-3.5 border-2 border-[#B7DDB7] shadow-xl animate-bounce flex items-center gap-2">
             <span>🌸</span>
@@ -537,7 +610,6 @@ export default function Home() {
           </div>
         )}
 
-        {/* CABECERA */}
         <div className="flex items-center justify-between mb-5">
           <div className="text-xl font-black text-[#3D352E] tracking-tight">
             Dashboard
@@ -554,7 +626,10 @@ export default function Home() {
             </div>
 
             <button
-              onClick={() => showSaveNotice('🔔 Tu plan semanal está listo y sincronizado.')}
+              onClick={() => {
+                playPopSound();
+                showSaveNotice('🔔 Tu plan semanal está listo y sincronizado.');
+              }}
               className="w-10 h-10 rounded-full bg-[#FFFFFF] clay-icon-big flex items-center justify-center text-sm relative"
             >
               🔔
@@ -563,9 +638,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* ========================================================= */}
         {/* 1. FOCUS & POMODORO */}
-        {/* ========================================================= */}
         {activeTab === 'pomodoro' && (
           <div className="space-y-6">
             <div className="clay-card-big p-6 sm:p-7 bg-gradient-to-r from-[#FFF4F6] via-[#FFF9F3] to-[#FFFFFF] flex flex-col sm:flex-row items-center justify-between gap-5 relative overflow-hidden border border-[#FADCD5]">
@@ -620,9 +693,11 @@ export default function Home() {
               </div>
             </div>
 
-            {/* FRASE INSPIRACIONAL */}
             <div
-              onClick={() => setQuoteIdx((quoteIdx + 1) % quotes.length)}
+              onClick={() => {
+                playPopSound();
+                setQuoteIdx((quoteIdx + 1) % quotes.length);
+              }}
               className="clay-card-big p-4 bg-[#FFFBF0] border border-[#F5E6CA] cursor-pointer hover:scale-[1.01] transition-transform flex items-center gap-3"
             >
               <span className="w-10 h-10 rounded-2xl bg-[#FFF1C5] clay-icon-big flex items-center justify-center text-xl shrink-0">
@@ -635,7 +710,6 @@ export default function Home() {
               <span className="text-[10px] text-[#A89066] font-bold shrink-0">Toca para cambiar 🔄</span>
             </div>
 
-            {/* TARJETAS PASTEL */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
               {[
                 { label: 'Songs / XP', val: `${xp}`, sub: 'Iniciando semana', bg: 'bg-[#D9EBD9]', icon: '🎵', text: 'text-[#1E523A]' },
@@ -656,7 +730,6 @@ export default function Home() {
               ))}
             </div>
 
-            {/* BARRA DE RANGO Y HEATMAP SEMANAL */}
             <div className="clay-card-big p-5 sm:p-6 space-y-4">
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2">
@@ -678,7 +751,6 @@ export default function Home() {
                 <span className="font-black text-[#FF85A1]">¡Comenzando con todo esta semana, Lorena! 🌷</span>
               </div>
 
-              {/* HEATMAP */}
               <div className="pt-3 border-t border-[#F2E8DC]">
                 <div className="flex justify-between items-center mb-2.5">
                   <span className="text-xs font-black text-[#5C524A] flex items-center gap-1.5">
@@ -693,6 +765,7 @@ export default function Home() {
                       <div
                         key={day}
                         onClick={() => {
+                          playPopSound();
                           const updated = [...weeklyActive];
                           updated[idx] = !updated[idx];
                           setWeeklyActive(updated);
@@ -713,7 +786,6 @@ export default function Home() {
               </div>
             </div>
 
-            {/* MISIONES DIARIAS */}
             <div className="clay-card-big p-5 sm:p-6 space-y-3.5 border border-[#EADBCE]">
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2">
@@ -738,6 +810,7 @@ export default function Home() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div
                   onClick={() => {
+                    playPopSound();
                     setQuestPomo(!questPomo);
                     showSaveNotice(questPomo ? 'Bloque desmarcado' : '⏱️ ¡Meta de Focus marcada!');
                   }}
@@ -754,6 +827,7 @@ export default function Home() {
 
                 <div
                   onClick={() => {
+                    playPopSound();
                     setQuestCards(!questCards);
                     showSaveNotice(questCards ? 'Meta desmarcada' : '🗂️ ¡Meta de Flashcards marcada!');
                   }}
@@ -770,6 +844,7 @@ export default function Home() {
 
                 <div
                   onClick={() => {
+                    playPopSound();
                     setQuestListening(!questListening);
                     showSaveNotice(questListening ? 'Meta desmarcada' : '🎧 ¡Meta de Listening marcada!');
                   }}
@@ -786,7 +861,6 @@ export default function Home() {
               </div>
             </div>
 
-            {/* LOGROS PASTEL */}
             <div>
               <h2 className="text-xs font-black uppercase tracking-wider text-[#7A6E63] mb-3 flex items-center gap-1.5">
                 <span>🏆</span> Logros de Consistencia
@@ -800,7 +874,10 @@ export default function Home() {
                 ].map((b, idx) => (
                   <div
                     key={idx}
-                    onClick={() => showSaveNotice(`🏆 Logro: ${b.title} (${b.label}) activo en tu perfil.`)}
+                    onClick={() => {
+                      playPopSound();
+                      showSaveNotice(`🏆 Logro: ${b.title} (${b.label}) activo en tu perfil.`);
+                    }}
                     className="clay-card-big p-4 flex flex-col items-center text-center cursor-pointer hover:scale-105 transition-transform"
                   >
                     <div className={`w-14 h-14 ${b.bg} clay-icon-big rounded-[20px] flex items-center justify-center text-2xl mb-2`}>
@@ -813,7 +890,6 @@ export default function Home() {
               </div>
             </div>
 
-            {/* TEMPORIZADOR 3D */}
             <div className="clay-card-big p-6 space-y-4">
               <div className="flex justify-between items-center">
                 <div>
@@ -845,7 +921,10 @@ export default function Home() {
 
               <div className="flex gap-3">
                 <button
-                  onClick={() => setIsRunning(!isRunning)}
+                  onClick={() => {
+                    playPopSound();
+                    setIsRunning(!isRunning);
+                  }}
                   className={`flex-1 py-3.5 rounded-[20px] text-xs font-black clay-icon-big text-white transition-all ${
                     isRunning
                       ? 'bg-[#FF85A1] hover:bg-[#F26A8A]'
@@ -856,6 +935,7 @@ export default function Home() {
                 </button>
                 <button
                   onClick={() => {
+                    playPopSound();
                     setIsRunning(false);
                     setTimeLeft(pomoMinutes * 60);
                   }}
@@ -868,9 +948,7 @@ export default function Home() {
           </div>
         )}
 
-        {/* ========================================================= */}
         {/* 2. SPEAKING & FEEDBACK LAB */}
-        {/* ========================================================= */}
         {activeTab === 'speaking' && (
           <div className="space-y-6">
             <div>
@@ -891,6 +969,7 @@ export default function Home() {
               <a
                 href="https://speakandimprove.com"
                 target="_blank"
+                onClick={playPopSound}
                 className="px-5 py-2.5 rounded-[18px] clay-btn-pink text-xs font-black text-center whitespace-nowrap"
               >
                 Abrir Speak & Improve ↗
@@ -925,9 +1004,7 @@ export default function Home() {
           </div>
         )}
 
-        {/* ========================================================= */}
         {/* 3. BIBLIOTECA DE CURSOS */}
-        {/* ========================================================= */}
         {activeTab === 'cursos' && (
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -940,6 +1017,7 @@ export default function Home() {
               <a
                 href="https://consumer.hotmart.com"
                 target="_blank"
+                onClick={playPopSound}
                 className="px-5 py-2.5 rounded-[20px] clay-btn-pink text-xs font-black flex items-center justify-center gap-2 whitespace-nowrap self-start sm:self-auto"
               >
                 <span>👑</span> Abrir Mi Cuenta Hotmart ↗
@@ -960,6 +1038,7 @@ export default function Home() {
                   <a
                     href="https://app.inglespractico.info"
                     target="_blank"
+                    onClick={playPopSound}
                     className="px-4 py-2 rounded-[18px] bg-[#FFAAA6] hover:bg-[#FF85A1] text-white font-black text-xs clay-icon-big whitespace-nowrap"
                   >
                     🚀 Abrir App
@@ -967,6 +1046,7 @@ export default function Home() {
                   <a
                     href="https://app.inglespractico.info"
                     target="_blank"
+                    onClick={playPopSound}
                     className="px-4 py-2 rounded-[18px] bg-[#FFF1C5] text-[#8C6200] font-black text-xs clay-icon-big whitespace-nowrap"
                   >
                     📖 PDFs
@@ -978,7 +1058,10 @@ export default function Home() {
                 <span className="text-xs font-bold text-[#6D635B] whitespace-nowrap">Semana completada:</span>
                 <select
                   value={ipWeek}
-                  onChange={e => setIpWeek(Number(e.target.value))}
+                  onChange={e => {
+                    playPopSound();
+                    setIpWeek(Number(e.target.value));
+                  }}
                   className="flex-1 min-w-[180px] clay-inset-pill p-2.5 text-xs font-black text-[#3D352E] focus:outline-none"
                 >
                   {Array.from({ length: 12 }, (_, i) => (
@@ -987,6 +1070,7 @@ export default function Home() {
                 </select>
                 <button
                   onClick={() => {
+                    playChimeSound();
                     setWaterDrops(prev => prev + 1);
                     showSaveNotice(`✅ Inglés Práctico guardado en Semana ${ipWeek} (+1 💧)`);
                   }}
@@ -1011,6 +1095,7 @@ export default function Home() {
                   <a
                     href="https://consumer.hotmart.com"
                     target="_blank"
+                    onClick={playPopSound}
                     className="px-4 py-2 rounded-[18px] bg-[#38BDF8] hover:bg-[#0284C7] text-white font-black text-xs clay-icon-big whitespace-nowrap"
                   >
                     🎬 Ver en Hotmart ↗
@@ -1018,6 +1103,7 @@ export default function Home() {
                   <a
                     href="https://consumer.hotmart.com"
                     target="_blank"
+                    onClick={playPopSound}
                     className="px-4 py-2 rounded-[18px] bg-[#D4EBF8] text-[#0369A1] font-black text-xs clay-icon-big whitespace-nowrap"
                   >
                     📑 Guías
@@ -1032,13 +1118,17 @@ export default function Home() {
                   min="1"
                   max="130"
                   value={gringoUnit}
-                  onChange={e => setGringoUnit(Number(e.target.value))}
+                  onChange={e => {
+                    playPopSound();
+                    setGringoUnit(Number(e.target.value));
+                  }}
                   className="w-24 clay-inset-pill p-2.5 text-xs font-black text-[#3D352E] focus:outline-none"
                 />
                 <span className="text-xs text-[#8C7E72] font-semibold">de 130</span>
                 <div className="flex-1 hidden sm:block"></div>
                 <button
                   onClick={() => {
+                    playChimeSound();
                     setWaterDrops(prev => prev + 1);
                     showSaveNotice(`✅ Gringo Academy guardado en Telenovela ${gringoUnit} (+1 💧)`);
                   }}
@@ -1063,6 +1153,7 @@ export default function Home() {
                   <a
                     href="https://consumer.hotmart.com"
                     target="_blank"
+                    onClick={playPopSound}
                     className="px-4 py-2 rounded-[18px] bg-[#A855F7] hover:bg-[#9333EA] text-white font-black text-xs clay-icon-big whitespace-nowrap"
                   >
                     🎧 Abrir en Hotmart ↗
@@ -1070,6 +1161,7 @@ export default function Home() {
                   <a
                     href="https://consumer.hotmart.com"
                     target="_blank"
+                    onClick={playPopSound}
                     className="px-4 py-2 rounded-[18px] bg-[#E6DCF5] text-[#5B21B6] font-black text-xs clay-icon-big whitespace-nowrap"
                   >
                     🎵 Audios
@@ -1081,7 +1173,10 @@ export default function Home() {
                 <span className="text-xs font-bold text-[#6D635B] whitespace-nowrap">Módulo activo:</span>
                 <select
                   value={neuralWeek}
-                  onChange={e => setNeuralWeek(Number(e.target.value))}
+                  onChange={e => {
+                    playPopSound();
+                    setNeuralWeek(Number(e.target.value));
+                  }}
                   className="flex-1 min-w-[180px] clay-inset-pill p-2.5 text-xs font-black text-[#3D352E] focus:outline-none"
                 >
                   {Array.from({ length: 12 }, (_, i) => (
@@ -1090,6 +1185,7 @@ export default function Home() {
                 </select>
                 <button
                   onClick={() => {
+                    playChimeSound();
                     setWaterDrops(prev => prev + 1);
                     showSaveNotice(`✅ Activación Neural guardada en Fase ${neuralWeek} (+1 💧)`);
                   }}
@@ -1102,9 +1198,7 @@ export default function Home() {
           </div>
         )}
 
-        {/* ========================================================= */}
-        {/* 4. HUB DE PLATAFORMAS CON CAMBRIDGE DICTIONARY REINCORPORADO */}
-        {/* ========================================================= */}
+        {/* 4. HUB DE PLATAFORMAS */}
         {activeTab === 'hub' && (
           <div className="space-y-6">
             <div>
@@ -1133,7 +1227,12 @@ export default function Home() {
                     </div>
                     <p className="text-xs text-[#6B5E55] leading-relaxed font-medium">{p.desc}</p>
                   </div>
-                  <a href={p.link} target="_blank" className={`mt-4 text-center py-2.5 rounded-[18px] font-black text-xs clay-icon-big ${p.btnBg} block`}>
+                  <a
+                    href={p.link}
+                    target="_blank"
+                    onClick={playPopSound}
+                    className={`mt-4 text-center py-2.5 rounded-[18px] font-black text-xs clay-icon-big ${p.btnBg} block`}
+                  >
                     {p.btn} ↗
                   </a>
                 </div>
@@ -1142,9 +1241,7 @@ export default function Home() {
           </div>
         )}
 
-        {/* ========================================================= */}
         {/* 5. LISTENING & INMERSIÓN */}
-        {/* ========================================================= */}
         {activeTab === 'listening' && (
           <div className="space-y-6">
             <div>
@@ -1166,6 +1263,7 @@ export default function Home() {
                 <a
                   href="https://youglish.com/pronounce/english"
                   target="_blank"
+                  onClick={playPopSound}
                   className="inline-block px-5 py-2.5 rounded-[18px] clay-btn-pink text-xs font-black"
                 >
                   Probar en YouGlish ↗
@@ -1183,6 +1281,7 @@ export default function Home() {
                 <a
                   href="https://www.bbc.co.uk/learningenglish/features/6-minute-english"
                   target="_blank"
+                  onClick={playPopSound}
                   className="inline-block px-5 py-2.5 rounded-[18px] bg-[#38BDF8] hover:bg-[#0284C7] text-white font-black text-xs clay-icon-big"
                 >
                   Escuchar BBC 6-Minute ↗
@@ -1202,6 +1301,7 @@ export default function Home() {
               </div>
               <button
                 onClick={() => {
+                  playChimeSound();
                   setXp(prev => prev + 30);
                   setTotalMinutes(prev => prev + 20);
                   setWaterDrops(prev => prev + 2);
@@ -1216,9 +1316,7 @@ export default function Home() {
           </div>
         )}
 
-        {/* ========================================================= */}
         {/* 6. WRITING CLINIC */}
-        {/* ========================================================= */}
         {activeTab === 'writing' && (
           <div className="space-y-6">
             <div>
@@ -1240,7 +1338,10 @@ export default function Home() {
                 <label className="block text-xs font-black text-[#3D352E] mb-2">Tipo de texto a redactar:</label>
                 <select
                   value={writingType}
-                  onChange={e => setWritingType(e.target.value)}
+                  onChange={e => {
+                    playPopSound();
+                    setWritingType(e.target.value);
+                  }}
                   className="w-full clay-inset-pill p-3 text-xs font-black text-[#3D352E] focus:outline-none"
                 >
                   <option>Diario personal / Reflexión del día</option>
@@ -1278,9 +1379,7 @@ export default function Home() {
           </div>
         )}
 
-        {/* ========================================================= */}
         {/* 7. RUTA DE HITOS (A0 A C2) */}
-        {/* ========================================================= */}
         {activeTab === 'milestones' && (
           <div className="space-y-6">
             <div>
@@ -1302,7 +1401,10 @@ export default function Home() {
               ].map(lvl => (
                 <button
                   key={lvl.id}
-                  onClick={() => setSelectedMilestone(lvl.id)}
+                  onClick={() => {
+                    playPopSound();
+                    setSelectedMilestone(lvl.id);
+                  }}
                   className={`px-4 py-2.5 rounded-[18px] text-xs font-black transition-all shrink-0 ${
                     selectedMilestone === lvl.id
                       ? `${lvl.color} clay-icon-big scale-105`
@@ -1320,9 +1422,9 @@ export default function Home() {
                   <span className="text-[10px] font-black uppercase px-3 py-1 rounded-full bg-[#FFD6DE] text-[#A84A60] clay-icon-big inline-block">Nivel A0 • Primeros Pasos</span>
                   <h3 className="text-base font-black text-[#3D352E]">Fundamentos Absolutos y Desbloqueo Inicial</h3>
                   <ul className="text-xs text-[#52443C] space-y-2.5 leading-relaxed font-medium">
-                    <li>• <strong>Gramática indispensable:</strong> Verbo <em>To Be</em> en afirmación, negación y pregunta. Pronombres personales (I, you, he, she, it, we, they) y adjetivos posesivos (my, your, her, his).</li>
-                    <li>• <strong>Expresiones fijas:</strong> Edad (<em>I am 38 years old</em>), origen (<em>I am from Mexico</em>), alfabeto para deletreo y números básicos.</li>
-                    <li>• <strong>Meta evaluable:</strong> Presentarte a ti misma, decir tu profesión, origen y edad con pronunciación fluida y sin titubeos.</li>
+                    <li>• <strong>Gramática indispensable:</strong> Verbo <em>To Be</em> en afirmación, negación y pregunta. Pronombres personales y adjetivos posesivos.</li>
+                    <li>• <strong>Expresiones fijas:</strong> Edad (<em>I am 38 years old</em>), origen (<em>I am from Mexico</em>) y alfabeto.</li>
+                    <li>• <strong>Meta evaluable:</strong> Presentarte a ti misma con pronunciación clara y sin titubeos.</li>
                   </ul>
                 </>
               )}
@@ -1332,8 +1434,7 @@ export default function Home() {
                   <span className="text-[10px] font-black uppercase px-3 py-1 rounded-full bg-[#D4EBF8] text-[#1E6091] clay-icon-big inline-block">Nivel A1 • Elemental</span>
                   <h3 className="text-base font-black text-[#3D352E]">Rutinas y Entorno Cotidiano</h3>
                   <ul className="text-xs text-[#52443C] space-y-2.5 leading-relaxed font-medium">
-                    <li>• <strong>Gramática indispensable:</strong> Presente Simple (regla de tercera persona con -s/-es), auxiliares <em>do / does / don&apos;t / doesn&apos;t</em>, y preposiciones de tiempo/lugar (in, on, at).</li>
-                    <li>• <strong>Vocabulario clave:</strong> Horas, comida, familia, compras y pasatiempos.</li>
+                    <li>• <strong>Gramática indispensable:</strong> Presente Simple (regla de tercera persona con -s/-es), auxiliares <em>do / does</em> y preposiciones.</li>
                     <li>• <strong>Meta evaluable:</strong> Describir tu día típico de la mañana a la noche sin traducir mentalmente.</li>
                   </ul>
                 </>
@@ -1344,8 +1445,8 @@ export default function Home() {
                   <span className="text-[10px] font-black uppercase px-3 py-1 rounded-full bg-[#D9EBD9] text-[#1E523A] clay-icon-big inline-block">Nivel A2 • Pre-Intermedio</span>
                   <h3 className="text-base font-black text-[#3D352E]">Pasado, Planes y Experiencias Inmediatas</h3>
                   <ul className="text-xs text-[#52443C] space-y-2.5 leading-relaxed font-medium">
-                    <li>• <strong>Gramática indispensable:</strong> Pasado Simple regular (-ed) y verbos irregulares clave, pasado continuo (was/were doing), y futuro con <em>going to</em> vs <em>will</em>.</li>
-                    <li>• <strong>Meta evaluable:</strong> Contar qué hiciste el fin de semana pasado y qué harás el próximo mes.</li>
+                    <li>• <strong>Gramática:</strong> Pasado Simple regular (-ed) y verbos irregulares clave, pasado continuo, y futuro con <em>going to</em> vs <em>will</em>.</li>
+                    <li>• <strong>Meta:</strong> Contar qué hiciste el fin de semana pasado y qué harás el próximo mes.</li>
                   </ul>
                 </>
               )}
@@ -1355,8 +1456,8 @@ export default function Home() {
                   <span className="text-[10px] font-black uppercase px-3 py-1 rounded-full bg-[#E6DCF5] text-[#5B21B6] clay-icon-big inline-block">Nivel B1 • Intermedio Independiente</span>
                   <h3 className="text-base font-black text-[#3D352E]">Autonomía Conversacional y Trabajo</h3>
                   <ul className="text-xs text-[#52443C] space-y-2.5 leading-relaxed font-medium">
-                    <li>• <strong>Gramática indispensable:</strong> Present Perfect (con <em>already, yet, just, since, for</em>), condicionales y modales.</li>
-                    <li>• <strong>Meta evaluable:</strong> Mantener una conversación fluida explicando tus proyectos o resolver imprevistos en viajes.</li>
+                    <li>• <strong>Gramática:</strong> Present Perfect, condicionales y verbos modales.</li>
+                    <li>• <strong>Meta:</strong> Mantener una conversación fluida de 15 minutos sobre tus proyectos.</li>
                   </ul>
                 </>
               )}
@@ -1366,8 +1467,8 @@ export default function Home() {
                   <span className="text-[10px] font-black uppercase px-3 py-1 rounded-full bg-[#FFD6DE] text-[#A84A60] clay-icon-big inline-block">Nivel B2 • Fluidez Profesional</span>
                   <h3 className="text-base font-black text-[#3D352E]">Dominio Laboral y Fluidez Espontánea</h3>
                   <ul className="text-xs text-[#52443C] space-y-2.5 leading-relaxed font-medium">
-                    <li>• <strong>Gramática indispensable:</strong> Condicionales avanzados, voz pasiva y phrasal verbs idiomáticos.</li>
-                    <li>• <strong>Meta evaluable:</strong> Participar en reuniones de trabajo y entender podcasts a velocidad nativa.</li>
+                    <li>• <strong>Gramática:</strong> Condicionales avanzados, voz pasiva y phrasal verbs idiomáticos.</li>
+                    <li>• <strong>Meta:</strong> Participar en reuniones internacionales y entender podcasts a velocidad normal.</li>
                   </ul>
                 </>
               )}
@@ -1395,9 +1496,7 @@ export default function Home() {
           </div>
         )}
 
-        {/* ========================================================= */}
         {/* 8. FLASHCARDS ACTIVAS */}
-        {/* ========================================================= */}
         {activeTab === 'flashcards' && (
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -1413,6 +1512,7 @@ export default function Home() {
                   <button
                     key={filter}
                     onClick={() => {
+                      playPopSound();
                       setCardLevelFilter(filter);
                       setCardIndex(0);
                       setShowAnswer(false);
@@ -1430,7 +1530,10 @@ export default function Home() {
             </div>
 
             <div
-              onClick={() => setShowAnswer(!showAnswer)}
+              onClick={() => {
+                playPopSound();
+                setShowAnswer(!showAnswer);
+              }}
               className="clay-card-big p-10 sm:p-14 text-center cursor-pointer hover:scale-[1.01] transition-all min-h-[240px] flex flex-col items-center justify-center space-y-3.5 relative"
             >
               <div className="flex items-center gap-2">
@@ -1460,6 +1563,7 @@ export default function Home() {
             <div className="flex gap-3">
               <button
                 onClick={() => {
+                  playPopSound();
                   setShowAnswer(false);
                   setCardIndex(prev => prev + 1);
                 }}
@@ -1469,6 +1573,7 @@ export default function Home() {
               </button>
               <button
                 onClick={() => {
+                  playChimeSound();
                   setXp(prev => prev + 20);
                   setFavoritesCount(prev => prev + 1);
                   setWaterDrops(prev => prev + 1);
@@ -1485,9 +1590,7 @@ export default function Home() {
           </div>
         )}
 
-        {/* ========================================================= */}
         {/* 9. QUIZZES & EVALUACIONES */}
-        {/* ========================================================= */}
         {activeTab === 'quizzes' && (
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -1566,7 +1669,6 @@ export default function Home() {
                 })}
               </div>
 
-              {/* RETROALIMENTACIÓN */}
               {selectedAnswer !== null && (
                 <div className="space-y-3 pt-2">
                   <div className={`p-4 rounded-[20px] text-xs font-bold clay-inset-pill leading-relaxed ${
