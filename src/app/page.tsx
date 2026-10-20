@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState('pomodoro');
+  const [activeTab, setActiveTab] = useState('quizzes');
   
   // Métricas persistentes
   const [xp, setXp] = useState(0);
@@ -13,7 +13,7 @@ export default function Home() {
   
   // Sistema de Jardín y Planta Viva
   const [waterDrops, setWaterDrops] = useState(3);
-  const [plantStage, setPlantStage] = useState(1); // 1 a 5
+  const [plantStage, setPlantStage] = useState(1);
 
   // Misiones Diarias (Quests)
   const [questPomo, setQuestPomo] = useState(false);
@@ -107,9 +107,79 @@ export default function Home() {
     { lvl: 'C2', cat: 'Modismos', front: 'To hit the nail on the head', back: 'Dar en el clavo / acertar con total exactitud 🎯' },
   ];
 
-  // Quiz State
-  const [quizAnswer, setQuizAnswer] = useState<string | null>(null);
-  const [quizScore, setQuizScore] = useState<number | null>(null);
+  // BANCO DE PREGUNTAS SECUENCIALES PARA QUIZZES
+  const quizList = [
+    {
+      level: 'NIVEL A0 • Starter',
+      question: '¿Cuál es la forma correcta en inglés para decir "Tengo 30 años"?',
+      options: [
+        { text: 'I have 30 years', correct: false },
+        { text: 'I am 30 years old', correct: true },
+        { text: 'I am having 30 years', correct: false },
+        { text: 'I got 30 years', correct: false },
+      ],
+      explanation: 'En inglés la edad se indica con el verbo To Be ("I am ... years old"), nunca con "have".'
+    },
+    {
+      level: 'NIVEL A1 • Presente Simple',
+      question: 'Completa la oración: "She _____ coffee every single morning."',
+      options: [
+        { text: 'drink', correct: false },
+        { text: 'drinking', correct: false },
+        { text: 'drinks', correct: true },
+        { text: 'is drink', correct: false },
+      ],
+      explanation: 'En Presente Simple, a las terceras personas (he, she, it) se les añade "-s" al verbo.'
+    },
+    {
+      level: 'NIVEL A2 • Pasado Simple',
+      question: '¿Cuál es el pasado del verbo irregular "BUY" (comprar)?',
+      options: [
+        { text: 'Buyed', correct: false },
+        { text: 'Bought', correct: true },
+        { text: 'Brought', correct: false },
+        { text: 'Boat', correct: false },
+      ],
+      explanation: 'El pasado de "buy" es "bought" (ojo: "brought" es el pasado de "bring").'
+    },
+    {
+      level: 'NIVEL B1 • Present Perfect',
+      question: 'Elige la opción correcta: "I have lived in this city _____ five years."',
+      options: [
+        { text: 'since', correct: false },
+        { text: 'for', correct: true },
+        { text: 'during', correct: false },
+        { text: 'ago', correct: false },
+      ],
+      explanation: 'Se utiliza "for" para periodos o duraciones de tiempo, y "since" para puntos de partida exactos.'
+    },
+    {
+      level: 'NIVEL B2 • Preposiciones & Phrasal Verbs',
+      question: '¿Qué significa el phrasal verb "LOOK FORWARD TO"?',
+      options: [
+        { text: 'Mirar hacia adelante con precaución', correct: false },
+        { text: 'Esperar algo con mucha emoción e ilusión', correct: true },
+        { text: 'Buscar un objeto extraviado', correct: false },
+        { text: 'Investigar un problema técnico', correct: false },
+      ],
+      explanation: '"Look forward to" expresa entusiasmo por un evento futuro (ej: I look forward to seeing you).'
+    },
+    {
+      level: 'NIVEL C1 • Inversión Enfatizada',
+      question: 'Completa la inversión formal: "Hardly _____ home when the phone rang."',
+      options: [
+        { text: 'I had arrived', correct: false },
+        { text: 'had I arrived', correct: true },
+        { text: 'did I arrived', correct: false },
+        { text: 'I arrived', correct: false },
+      ],
+      explanation: 'Tras adverbios negativos iniciales como "Hardly" o "Scarcely", se invierte el sujeto y el auxiliar (Had I arrived).'
+    }
+  ];
+
+  const [currentQuizIdx, setCurrentQuizIdx] = useState(0);
+  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+  const [isAnswerCorrect, setIsAnswerCorrect] = useState<boolean | null>(null);
 
   // Timer Effect
   useEffect(() => {
@@ -195,6 +265,23 @@ export default function Home() {
     }
   };
 
+  const handleSelectQuizOption = (option: { text: string; correct: boolean }) => {
+    if (selectedAnswer !== null) return; // Evitar doble selección
+    setSelectedAnswer(option.text);
+    setIsAnswerCorrect(option.correct);
+    if (option.correct) {
+      setXp(prev => prev + 30);
+      setWaterDrops(prev => prev + 1);
+      showSaveNotice('🎉 ¡Correcto! +30 XP y +1 💧 Gotita de agua ganada');
+    }
+  };
+
+  const handleNextQuiz = () => {
+    setSelectedAnswer(null);
+    setIsAnswerCorrect(null);
+    setCurrentQuizIdx(prev => (prev + 1) % quizList.length);
+  };
+
   return (
     <div className="flex min-h-screen bg-[#F7F2EA] text-[#4A4139] font-sans antialiased selection:bg-[#FCD5CE]">
       {/* ESTILOS DE RELIEVE Y SOMBRAS 3D CLAY */}
@@ -254,7 +341,7 @@ export default function Home() {
       {/* BARRA LATERAL SALVIA */}
       <aside className="w-76 shrink-0 bg-[#DCECE7] p-5 flex flex-col justify-between border-r border-[#CFE1DC] shadow-[6px_0_24px_rgba(180,200,195,0.2)]">
         <div>
-          {/* AVATAR CON EFECTO 3D */}
+          {/* AVATAR */}
           <div className="clay-card-big p-3.5 mb-5 flex items-center gap-3 bg-[#FFFFFF]/90">
             <div className="relative w-14 h-14 rounded-[24px] p-1 bg-[#DCECE7] clay-icon-big flex items-center justify-center shrink-0">
               <div className="w-full h-full rounded-[18px] overflow-hidden bg-[#FFD8CC] flex items-center justify-center font-bold text-[#A84A32]">
@@ -324,7 +411,7 @@ export default function Home() {
           </nav>
         </div>
 
-        {/* ACCESO A GOODNOTES */}
+        {/* GOODNOTES */}
         <div className="pt-3 border-t border-[#CFE1DC]">
           <div className="clay-card-big p-4 bg-gradient-to-br from-[#FFE8DF] via-[#FFD8CC] to-[#FFCAD4] border-2 border-[#FFCCD5] flex flex-col items-center text-center relative overflow-hidden">
             <div className="w-12 h-12 rounded-2xl bg-[#FFE4D6] clay-icon-big flex items-center justify-center text-xl mb-1 shadow-inner">
@@ -379,11 +466,10 @@ export default function Home() {
         </div>
 
         {/* ========================================================= */}
-        {/* 1. FOCUS & POMODORO CON PLANTA VIVA Y DAILY QUESTS */}
+        {/* 1. FOCUS & POMODORO */}
         {/* ========================================================= */}
         {activeTab === 'pomodoro' && (
           <div className="space-y-6">
-            {/* BANNER PRINCIPAL CON PLANTA VIVA INTERACTIVA */}
             <div className="clay-card-big p-6 sm:p-7 bg-gradient-to-r from-[#FFF2EB] via-[#FFF8F3] to-[#FFFFFF] flex flex-col sm:flex-row items-center justify-between gap-5 relative overflow-hidden border border-[#F3E2D8]">
               <div className="space-y-2 z-10 w-full sm:w-auto">
                 <div className="flex items-center gap-2 text-xs font-black text-[#8C341E]">
@@ -412,7 +498,6 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* JARDÍN INTERACTIVO */}
               <div className="flex items-center gap-3">
                 <div className="w-20 h-20 rounded-[28px] bg-[#FFE8DF] clay-icon-big flex items-center justify-center text-4xl shadow-inner">
                   🎧
@@ -429,7 +514,7 @@ export default function Home() {
               </div>
             </div>
 
-            {/* FRASE INSPIRACIONAL TÁCTIL */}
+            {/* FRASE INSPIRACIONAL */}
             <div
               onClick={() => setQuoteIdx((quoteIdx + 1) % quotes.length)}
               className="clay-card-big p-4 bg-[#FFF9F2] border border-[#F6E1D3] cursor-pointer hover:scale-[1.01] transition-transform flex items-center gap-3"
@@ -444,7 +529,7 @@ export default function Home() {
               <span className="text-[10px] text-[#A88B7E] font-bold shrink-0">Toca para cambiar 🔄</span>
             </div>
 
-            {/* 4 TARJETAS PASTEL INICIADAS DESDE CERO */}
+            {/* TARJETAS PASTEL */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
               {[
                 { label: 'Songs / XP', val: `${xp}`, sub: 'Iniciando semana', bg: 'bg-[#D8F3DC]', icon: '🎵', text: 'text-[#1B4332]' },
@@ -465,7 +550,7 @@ export default function Home() {
               ))}
             </div>
 
-            {/* MISIONES DIARIAS / DAILY QUESTS */}
+            {/* MISIONES DIARIAS */}
             <div className="clay-card-big p-5 sm:p-6 space-y-3.5 border border-[#E8DFC8]">
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2">
@@ -538,7 +623,7 @@ export default function Home() {
               </div>
             </div>
 
-            {/* BARRA DE RANGO EN NIVEL 1 */}
+            {/* BARRA DE RANGO */}
             <div className="clay-card-big p-5 sm:p-6 space-y-2.5">
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2">
@@ -561,7 +646,7 @@ export default function Home() {
               </div>
             </div>
 
-            {/* LOGROS PASTEL SALIDOS CON RELIEVE 3D */}
+            {/* LOGROS PASTEL */}
             <div>
               <h2 className="text-xs font-black uppercase tracking-wider text-[#7A6E63] mb-3 flex items-center gap-1.5">
                 <span>🏆</span> Logros de Consistencia
@@ -588,7 +673,7 @@ export default function Home() {
               </div>
             </div>
 
-            {/* TEMPORIZADOR 3D INTERACTIVO */}
+            {/* TEMPORIZADOR 3D */}
             <div className="clay-card-big p-6 space-y-4">
               <div className="flex justify-between items-center">
                 <div>
@@ -701,7 +786,7 @@ export default function Home() {
         )}
 
         {/* ========================================================= */}
-        {/* 3. BIBLIOTECA DE CURSOS (BOTONES AJUSTADOS RESPONSIVOS) */}
+        {/* 3. BIBLIOTECA DE CURSOS */}
         {/* ========================================================= */}
         {activeTab === 'cursos' && (
           <div className="space-y-6">
@@ -749,7 +834,6 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* FILA DE CONTROL ADAPTABLE */}
               <div className="pt-3 border-t border-[#F3E7DC] flex flex-wrap sm:flex-nowrap items-center gap-2.5">
                 <span className="text-xs font-bold text-[#6D635B] whitespace-nowrap">Semana completada:</span>
                 <select
@@ -801,7 +885,6 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* FILA DE CONTROL ADAPTABLE */}
               <div className="pt-3 border-t border-[#F3E7DC] flex flex-wrap sm:flex-nowrap items-center gap-2.5">
                 <span className="text-xs font-bold text-[#6D635B] whitespace-nowrap">Telenovela / Bloque:</span>
                 <input
@@ -854,7 +937,6 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* FILA DE CONTROL ADAPTABLE */}
               <div className="pt-3 border-t border-[#F3E7DC] flex flex-wrap sm:flex-nowrap items-center gap-2.5">
                 <span className="text-xs font-bold text-[#6D635B] whitespace-nowrap">Módulo activo:</span>
                 <select
@@ -1231,65 +1313,89 @@ export default function Home() {
         )}
 
         {/* ========================================================= */}
-        {/* 9. QUIZZES & EVALUACIONES */}
+        {/* 9. QUIZZES & EVALUACIONES (BANCO COMPLETO CON BOTÓN SIGUIENTE) */}
         {/* ========================================================= */}
         {activeTab === 'quizzes' && (
           <div className="space-y-6">
-            <div>
-              <h1 className="text-2xl font-black text-[#3D352E] tracking-tight flex items-center gap-2">
-                Quizzes & Evaluaciones <span>🧁</span>
-              </h1>
-              <p className="text-[#7A6E63] text-xs mt-1">Preguntas de diagnóstico de nivel con opciones en relieve y toque de color pastel.</p>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h1 className="text-2xl font-black text-[#3D352E] tracking-tight flex items-center gap-2">
+                  Quizzes & Evaluaciones <span>🧁</span>
+                </h1>
+                <p className="text-[#7A6E63] text-xs mt-1">Preguntas de diagnóstico progresivas de A0 a C1 con retroalimentación inmediata.</p>
+              </div>
+              <div className="clay-inset-pill px-4 py-1.5 text-xs font-black text-[#6B5E55] self-start sm:self-auto">
+                Pregunta {currentQuizIdx + 1} de {quizList.length}
+              </div>
             </div>
 
             <div className="clay-card-big p-6 sm:p-7 space-y-4">
-              <span className="text-[10px] font-black uppercase px-3 py-1 rounded-full bg-[#D9EDF8] text-[#1E6091] clay-icon-big inline-block">
-                Nivel A0 • Pregunta de Diagnóstico
-              </span>
-              <div className="text-sm font-black text-[#3D352E]">
-                ¿Cuál es la forma correcta en inglés para decir &quot;Tengo 30 años&quot;?
+              <div className="flex justify-between items-center">
+                <span className="text-[10px] font-black uppercase px-3 py-1 rounded-full bg-[#D9EDF8] text-[#1E6091] clay-icon-big inline-block">
+                  {quizList[currentQuizIdx].level}
+                </span>
+                <span className="text-[11px] font-bold text-[#8C7E72]">
+                  Aciertos: +30 XP y +1 💧
+                </span>
               </div>
 
-              <div className="space-y-2.5">
-                {[
-                  { text: 'I have 30 years', correct: false, colorBg: 'bg-[#FFF2EB] hover:bg-[#FFE8DF]', border: 'border-[#FADCD1]' },
-                  { text: 'I am 30 years old', correct: true, colorBg: 'bg-[#EBF5EE] hover:bg-[#DDF0E3]', border: 'border-[#D0EADB]' },
-                  { text: 'I am having 30 years', correct: false, colorBg: 'bg-[#FFF7E6] hover:bg-[#FFEECE]', border: 'border-[#FCE5B5]' },
-                  { text: 'I got 30 years', correct: false, colorBg: 'bg-[#F2F4FD] hover:bg-[#E6EAFA]', border: 'border-[#DBE2F8]' },
-                ].map((op, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => {
-                      setQuizAnswer(op.text);
-                      setQuizScore(op.correct ? 100 : 0);
-                      if (op.correct) {
-                        setXp(prev => prev + 30);
-                        setWaterDrops(prev => prev + 1);
-                      }
-                    }}
-                    className={`w-full text-left p-3.5 rounded-[20px] text-xs font-black transition-all border ${op.border} ${
-                      quizAnswer === op.text
-                        ? op.correct
-                          ? 'clay-icon-big bg-[#D8F3DC] text-[#1B4332] border-[#74C69D]'
-                          : 'clay-icon-big bg-[#FFD8CC] text-[#8C341E] border-[#FCA5A5]'
-                        : `clay-icon-big ${op.colorBg} text-[#4A4139]`
-                    }`}
-                  >
-                    <span className="flex items-center gap-2">
-                      <span className="w-5 h-5 rounded-full bg-white/80 flex items-center justify-center text-[10px] font-black text-[#7A6E63] shadow-sm">
-                        {String.fromCharCode(65 + idx)}
+              <div className="text-sm sm:text-base font-black text-[#3D352E] leading-snug">
+                {quizList[currentQuizIdx].question}
+              </div>
+
+              <div className="space-y-2.5 pt-1">
+                {quizList[currentQuizIdx].options.map((op, idx) => {
+                  const isSelected = selectedAnswer === op.text;
+                  let btnStyle = "bg-[#FFFFFF] text-[#4A4139] border-[#E8DFC8]";
+                  
+                  if (selectedAnswer !== null) {
+                    if (op.correct) {
+                      btnStyle = "bg-[#D8F3DC] text-[#1B4332] border-[#74C69D] font-extrabold";
+                    } else if (isSelected && !op.correct) {
+                      btnStyle = "bg-[#FFD8CC] text-[#8C341E] border-[#FCA5A5] font-extrabold";
+                    } else {
+                      btnStyle = "bg-[#F3EFE6] text-[#A89F91] border-transparent opacity-60";
+                    }
+                  }
+
+                  return (
+                    <button
+                      key={idx}
+                      onClick={() => handleSelectQuizOption(op)}
+                      disabled={selectedAnswer !== null}
+                      className={`w-full text-left p-3.5 rounded-[20px] text-xs font-black transition-all border clay-icon-big ${btnStyle}`}
+                    >
+                      <span className="flex items-center gap-2.5">
+                        <span className="w-6 h-6 rounded-full bg-white/80 flex items-center justify-center text-[10px] font-black text-[#7A6E63] shadow-sm shrink-0">
+                          {String.fromCharCode(65 + idx)}
+                        </span>
+                        <span>{op.text}</span>
                       </span>
-                      <span>{op.text}</span>
-                    </span>
-                  </button>
-                ))}
+                    </button>
+                  );
+                })}
               </div>
 
-              {quizScore !== null && (
-                <div className={`p-4 rounded-[20px] text-xs font-bold clay-inset-pill ${quizScore === 100 ? 'text-[#1B4332] bg-[#D8F3DC]' : 'text-[#8C341E] bg-[#FFD8CC]'}`}>
-                  {quizScore === 100
-                    ? '🎉 ¡Correcto! En inglés la edad se ES con el verbo To Be, no se tiene (+30 XP y +1 💧).'
-                    : '❌ Incorrecto. Recuerda: en inglés nunca se usa "have" para la edad, sino el verbo To Be ("I am ... years old").'}
+              {/* RETROALIMENTACIÓN Y BOTÓN SIGUIENTE */}
+              {selectedAnswer !== null && (
+                <div className="space-y-3 pt-2">
+                  <div className={`p-4 rounded-[20px] text-xs font-bold clay-inset-pill leading-relaxed ${
+                    isAnswerCorrect ? 'text-[#1B4332] bg-[#D8F3DC]' : 'text-[#8C341E] bg-[#FFD8CC]'
+                  }`}>
+                    <div className="font-black text-sm mb-0.5">
+                      {isAnswerCorrect ? '🎉 ¡Respuesta Correcta!' : '❌ Incorrecto'}
+                    </div>
+                    {quizList[currentQuizIdx].explanation}
+                  </div>
+
+                  <div className="flex gap-3 pt-1">
+                    <button
+                      onClick={handleNextQuiz}
+                      className="flex-1 py-3.5 rounded-[20px] clay-btn-orange text-xs font-black flex items-center justify-center gap-2"
+                    >
+                      <span>➡️</span> {currentQuizIdx + 1 === quizList.length ? 'Comenzar de Nuevo' : 'Siguiente Pregunta'}
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
