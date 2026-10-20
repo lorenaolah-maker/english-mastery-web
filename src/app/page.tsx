@@ -4,8 +4,32 @@ import React, { useState, useEffect } from 'react';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState('pomodoro');
-  const [xp, setXp] = useState(1248);
-  const [streak, setStreak] = useState(7);
+  
+  // Métricas desde cero para arrancar esta semana (persistentes en tu dispositivo)
+  const [xp, setXp] = useState(0);
+  const [streak, setStreak] = useState(1);
+  const [totalMinutes, setTotalMinutes] = useState(0);
+  const [favoritesCount, setFavoritesCount] = useState(0);
+
+  // Cargar datos previos si existen en el navegador
+  useEffect(() => {
+    const savedXp = localStorage.getItem('em_xp');
+    const savedMins = localStorage.getItem('em_mins');
+    const savedStreak = localStorage.getItem('em_streak');
+    const savedFavs = localStorage.getItem('em_favs');
+    if (savedXp !== null) setXp(Number(savedXp));
+    if (savedMins !== null) setTotalMinutes(Number(savedMins));
+    if (savedStreak !== null) setStreak(Number(savedStreak));
+    if (savedFavs !== null) setFavoritesCount(Number(savedFavs));
+  }, []);
+
+  // Guardar automáticamente al cambiar
+  useEffect(() => {
+    localStorage.setItem('em_xp', xp.toString());
+    localStorage.setItem('em_mins', totalMinutes.toString());
+    localStorage.setItem('em_streak', streak.toString());
+    localStorage.setItem('em_favs', favoritesCount.toString());
+  }, [xp, totalMinutes, streak, favoritesCount]);
   
   // Pomodoro Timer State
   const [pomoMinutes, setPomoMinutes] = useState(15);
@@ -56,8 +80,10 @@ export default function Home() {
       timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
     } else if (timeLeft === 0 && isRunning) {
       setIsRunning(false);
-      setXp(prev => prev + pomoMinutes * 10);
-      showSaveNotice('🎉 ¡Bloque de Pomodoro completado! Sumaste +' + (pomoMinutes * 10) + ' XP');
+      const earnedXp = pomoMinutes * 10;
+      setXp(prev => prev + earnedXp);
+      setTotalMinutes(prev => prev + pomoMinutes);
+      showSaveNotice(`🎉 ¡Bloque de ${pomoMinutes} min completado! +${earnedXp} XP`);
     }
     return () => clearInterval(timer);
   }, [isRunning, timeLeft, pomoMinutes]);
@@ -234,7 +260,6 @@ export default function Home() {
         {/* CARD INFERIOR GOODNOTES (CON CUADERNITO DIGITAL KAWAII) */}
         <div className="pt-4 border-t border-[#CFE1DC]">
           <div className="clay-card-big p-5 bg-gradient-to-br from-[#FFE8DF] via-[#FFD8CC] to-[#FFCAD4] border-2 border-[#FFCCD5] flex flex-col items-center text-center relative overflow-hidden">
-            {/* CUADERNITO DIGITAL EN RELIEVE */}
             <div className="w-13 h-13 rounded-2xl bg-[#FFE4D6] clay-icon-big flex items-center justify-center text-2xl mb-1 shadow-inner">
               📓
             </div>
@@ -284,7 +309,7 @@ export default function Home() {
         </div>
 
         {/* ========================================================= */}
-        {/* 1. FOCUS & POMODORO */}
+        {/* 1. FOCUS & POMODORO (EN CERO PARA INICIAR ESTA SEMANA) */}
         {/* ========================================================= */}
         {activeTab === 'pomodoro' && (
           <div className="space-y-6">
@@ -298,7 +323,7 @@ export default function Home() {
                   Let&apos;s master your English today! 🎶
                 </h1>
                 <p className="text-xs text-[#7A6E63] max-w-md font-medium">
-                  Construye fluidez real con 15 a 20 minutos de inmersión auditiva y práctica.
+                  Comienza tu semana de estudio con bloques de 15 a 20 minutos de inmersión y enfoque.
                 </p>
                 <div className="pt-1.5 flex gap-3">
                   <button
@@ -320,12 +345,13 @@ export default function Home() {
               </div>
             </div>
 
+            {/* 4 TARJETAS PASTEL REINICIADAS EN CERO */}
             <div className="grid grid-cols-4 gap-4">
               {[
-                { label: 'Songs Played', val: `${xp}`, sub: '+18% this week', bg: 'bg-[#D8F3DC]', icon: '🎵', text: 'text-[#1B4332]' },
-                { label: 'Favorites', val: '128', sub: '+8 this week', bg: 'bg-[#FFD8CC]', icon: '💖', text: 'text-[#8C341E]' },
-                { label: 'Hours Listened', val: '34.6', sub: '+6.2 this week', bg: 'bg-[#FFF0C2]', icon: '⏱️', text: 'text-[#7A5B00]' },
-                { label: 'Current Streak', val: `${streak}`, sub: 'days in a row', bg: 'bg-[#D9EDF8]', icon: '🔥', text: 'text-[#1E6091]' },
+                { label: 'Songs / XP', val: `${xp}`, sub: 'Iniciando semana', bg: 'bg-[#D8F3DC]', icon: '🎵', text: 'text-[#1B4332]' },
+                { label: 'Favorites', val: `${favoritesCount}`, sub: 'Tarjetas dominadas', bg: 'bg-[#FFD8CC]', icon: '💖', text: 'text-[#8C341E]' },
+                { label: 'Hours Listened', val: `${(totalMinutes / 60).toFixed(1)}h`, sub: `${totalMinutes} min registrados`, bg: 'bg-[#FFF0C2]', icon: '⏱️', text: 'text-[#7A5B00]' },
+                { label: 'Current Streak', val: `${streak}`, sub: 'Día 1 de racha', bg: 'bg-[#D9EDF8]', icon: '🔥', text: 'text-[#1E6091]' },
               ].map((m, idx) => (
                 <div key={idx} className="clay-card-big p-5 flex flex-col justify-between items-start h-46 text-left">
                   <div className={`w-13 h-13 rounded-[22px] ${m.bg} clay-icon-big flex items-center justify-center text-2xl`}>
@@ -340,11 +366,12 @@ export default function Home() {
               ))}
             </div>
 
+            {/* BARRA DE RANGO EN NIVEL 1 */}
             <div className="clay-card-big p-6 space-y-2.5">
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2">
                   <span className="text-xl">👑</span>
-                  <span className="font-black text-sm text-[#3D352E]">Nivel de Progreso: Traveler (Nivel 3)</span>
+                  <span className="font-black text-sm text-[#3D352E]">Nivel de Progreso: Beginner (Nivel 1)</span>
                 </div>
                 <span className="font-black text-[#D946EF] text-sm flex items-center gap-1">
                   <span>⭐</span> {xp} XP
@@ -353,15 +380,16 @@ export default function Home() {
               <div className="clay-inset-pill h-4.5 p-1 flex items-center">
                 <div
                   className="bg-gradient-to-r from-[#FF9A85] via-[#FFB8A3] to-[#FFD8CC] h-full rounded-full transition-all duration-500 shadow-sm"
-                  style={{ width: `${Math.min((xp / 2000) * 100, 100)}%` }}
+                  style={{ width: `${Math.min((xp / 1000) * 100, 100)}%` }}
                 />
               </div>
               <div className="text-[11px] text-[#7A6E63] flex justify-between font-semibold">
-                <span>Faltan {Math.max(2000 - xp, 0)} XP para el rango Talker</span>
-                <span className="font-black text-[#FF856D]">¡Excelente consistencia, Lorena! 🌷</span>
+                <span>Faltan {Math.max(1000 - xp, 0)} XP para el rango Traveler</span>
+                <span className="font-black text-[#FF856D]">¡Comenzando con todo esta semana, Lorena! 🌷</span>
               </div>
             </div>
 
+            {/* LOGROS PASTEL SALIDOS CON RELIEVE 3D */}
             <div>
               <h2 className="text-xs font-black uppercase tracking-wider text-[#7A6E63] mb-3.5 flex items-center gap-1.5">
                 <span>🏆</span> Logros de Consistencia
@@ -384,6 +412,7 @@ export default function Home() {
               </div>
             </div>
 
+            {/* TEMPORIZADOR 3D INTERACTIVO */}
             <div className="clay-card-big p-6 space-y-4">
               <div className="flex justify-between items-center">
                 <div>
@@ -496,7 +525,7 @@ export default function Home() {
         )}
 
         {/* ========================================================= */}
-        {/* 3. BIBLIOTECA DE CURSOS (HOTMART & PLATAFORMAS CON BOTONES SIMÉTRICOS) */}
+        {/* 3. BIBLIOTECA DE CURSOS */}
         {/* ========================================================= */}
         {activeTab === 'cursos' && (
           <div className="space-y-6">
@@ -664,7 +693,7 @@ export default function Home() {
         )}
 
         {/* ========================================================= */}
-        {/* 4. HUB DE PLATAFORMAS (CON BOTONES COLORIDOS CLAY) */}
+        {/* 4. HUB DE PLATAFORMAS */}
         {/* ========================================================= */}
         {activeTab === 'hub' && (
           <div className="space-y-6">
@@ -763,6 +792,7 @@ export default function Home() {
               <button
                 onClick={() => {
                   setXp(prev => prev + 30);
+                  setTotalMinutes(prev => prev + 20);
                   showSaveNotice('🎉 ¡20 min de Listening registrados! +30 XP');
                 }}
                 className="px-6 py-3 rounded-[20px] bg-[#52B788] hover:bg-[#40916C] text-white font-black text-xs clay-icon-big"
@@ -995,6 +1025,7 @@ export default function Home() {
               <button
                 onClick={() => {
                   setXp(prev => prev + 20);
+                  setFavoritesCount(prev => prev + 1);
                   setShowAnswer(false);
                   setCardIndex(prev => (prev + 1) % flashcards.length);
                   showSaveNotice('🎉 ¡Tarjeta dominada! +20 XP');
@@ -1008,7 +1039,7 @@ export default function Home() {
         )}
 
         {/* ========================================================= */}
-        {/* 9. QUIZZES & EVALUACIONES (BOTONES CON TOQUE DE COLOR PASTEL) */}
+        {/* 9. QUIZZES & EVALUACIONES */}
         {/* ========================================================= */}
         {activeTab === 'quizzes' && (
           <div className="space-y-6">
@@ -1027,7 +1058,6 @@ export default function Home() {
                 ¿Cuál es la forma correcta en inglés para decir &quot;Tengo 30 años&quot;?
               </div>
 
-              {/* OPCIONES CON TOQUE DE COLOR PASTEL 3D */}
               <div className="space-y-3">
                 {[
                   { text: 'I have 30 years', correct: false, colorBg: 'bg-[#FFF2EB] hover:bg-[#FFE8DF]', border: 'border-[#FADCD1]' },
