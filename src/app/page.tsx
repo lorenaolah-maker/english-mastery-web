@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState('vocabulario');
+  const [activeTab, setActiveTab] = useState('pomodoro');
   
   // Métricas persistentes
   const [xp, setXp] = useState(0);
@@ -960,56 +960,347 @@ export default function Home() {
           </div>
         )}
 
-        {/* 2. SPEAKING & FEEDBACK LAB */}
-        {activeTab === 'speaking' && (
+        {/* ========================================================= */}
+        {/* NUEVO MÓDULO: VOCABULARIO ESENCIAL (PDFS DE APOYO) */}
+        {/* ========================================================= */}
+        {activeTab === 'vocabulario' && (
           <div className="space-y-6">
-            <div>
-              <h1 className="text-2xl font-black text-[#3D352E] tracking-tight flex items-center gap-2">
-                Speaking & Feedback Lab <span>🐰</span>
-              </h1>
-              <p className="text-[#7A6E63] text-xs mt-1">Corrección de respuestas escritas con IA y evaluación oficial de Cambridge.</p>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h1 className="text-2xl font-black text-[#3D352E] tracking-tight flex items-center gap-2">
+                  Vocabulario Esencial (PDFs de Apoyo) <span>📖</span>
+                </h1>
+                <p className="text-[#7A6E63] text-xs mt-1">
+                  Material estructurado de los 200 sustantivos y las 500 palabras de mayor frecuencia de Inglés Práctico.
+                </p>
+              </div>
+
+              <div className="flex gap-1.5 overflow-x-auto pb-1">
+                {[
+                  { id: '200_SUSTANTIVOS', label: '200 Sustantivos' },
+                  { id: '500_PALABRAS', label: '500 Frecuentes' },
+                  { id: 'FALSOS_AMIGOS', label: 'Falsos Amigos' }
+                ].map(tab => (
+                  <button
+                    key={tab.id}
+                    onClick={() => {
+                      playPopSound();
+                      setVocabTab(tab.id);
+                    }}
+                    className={`px-3 py-1.5 rounded-full text-[11px] font-black transition-all ${
+                      vocabTab === tab.id
+                        ? 'bg-[#FFD6DE] text-[#A84A60] clay-icon-big font-extrabold'
+                        : 'bg-[#FFFFFF] text-[#8C7E72] hover:bg-[#F3ECE1]'
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            <div className="clay-card-big p-6 bg-gradient-to-r from-[#FFF5F7] to-[#FFFFFF] flex flex-col sm:flex-row sm:items-center justify-between gap-4 border border-[#FADCD5]">
-              <div>
-                <span className="text-[10px] uppercase font-black px-3 py-1 rounded-full bg-[#FFD6DE] text-[#A84A60] clay-icon-big inline-block">
-                  Oficial Cambridge 🎓
-                </span>
-                <div className="text-base font-black text-[#3D352E] mt-1.5">Evaluación de Voz con Sandi el Robot</div>
-                <div className="text-xs text-[#6B5E55] mt-0.5">Habla con el evaluador acústico de Cambridge para calibrar tu pronunciación (A1 a C2).</div>
+            <div className="clay-card-big p-4 flex items-center gap-3">
+              <span className="text-lg">🔍</span>
+              <input
+                type="text"
+                value={vocabSearch}
+                onChange={e => setVocabSearch(e.target.value)}
+                placeholder="Buscar palabra o traducción (ej. eye, child, actually)..."
+                className="w-full bg-transparent border-none text-xs text-[#3D352E] placeholder-[#A3978C] focus:outline-none font-medium"
+              />
+              {vocabSearch && (
+                <button
+                  onClick={() => setVocabSearch('')}
+                  className="text-xs text-[#8C7E72] hover:text-[#3D352E]"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+
+            {vocabTab === '200_SUSTANTIVOS' && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                {vocab200List
+                  .filter(v => v.en.toLowerCase().includes(vocabSearch.toLowerCase()) || v.es.toLowerCase().includes(vocabSearch.toLowerCase()))
+                  .map((item, idx) => (
+                    <div key={idx} className="clay-card-big p-4 flex items-start justify-between gap-3 hover:scale-[1.01] transition-transform">
+                      <div className="space-y-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-[#E3EFEA] text-[#245445]">
+                            {item.cat}
+                          </span>
+                          <span className="text-[10px] text-[#A89066] font-bold">/{item.ipa}/</span>
+                        </div>
+                        <div className="text-sm font-black text-[#3D352E]">{item.en}</div>
+                        <div className="text-xs text-[#A84A60] font-bold">{item.es}</div>
+                        <p className="text-[11px] text-[#7A6E63] font-medium leading-relaxed">{item.note}</p>
+                      </div>
+                      <button
+                        onClick={() => speakEnglish(item.en.split('/')[0])}
+                        className="w-9 h-9 rounded-full bg-[#FFFFFF] clay-icon-big flex items-center justify-center text-xs shrink-0 hover:scale-110 active:scale-95 transition-transform"
+                        title="Escuchar pronunciación"
+                      >
+                        🔊
+                      </button>
+                    </div>
+                  ))}
               </div>
-              <a
-                href="https://speakandimprove.com"
-                target="_blank"
-                onClick={playPopSound}
-                className="px-5 py-2.5 rounded-[18px] clay-btn-pink text-xs font-black text-center whitespace-nowrap"
+            )}
+
+            {vocabTab === '500_PALABRAS' && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                {vocab500List
+                  .filter(v => v.en.toLowerCase().includes(vocabSearch.toLowerCase()) || v.es.toLowerCase().includes(vocabSearch.toLowerCase()))
+                  .map((item, idx) => (
+                    <div key={idx} className="clay-card-big p-4 flex items-start justify-between gap-3 hover:scale-[1.01] transition-transform">
+                      <div className="space-y-1 min-w-0">
+                        <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-[#FFF1C5] text-[#8C6200]">
+                          {item.type}
+                        </span>
+                        <div className="text-sm font-black text-[#3D352E]">{item.en}</div>
+                        <div className="text-xs text-[#0369A1] font-bold">{item.es}</div>
+                        <p className="text-[11px] text-[#7A6E63] font-medium leading-relaxed">{item.note}</p>
+                      </div>
+                      <button
+                        onClick={() => speakEnglish(item.en.split('(')[0])}
+                        className="w-9 h-9 rounded-full bg-[#FFFFFF] clay-icon-big flex items-center justify-center text-xs shrink-0 hover:scale-110 active:scale-95 transition-transform"
+                        title="Escuchar pronunciación"
+                      >
+                        🔊
+                      </button>
+                    </div>
+                  ))}
+              </div>
+            )}
+
+            {vocabTab === 'FALSOS_AMIGOS' && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                {falseFriendsList
+                  .filter(v => v.en.toLowerCase().includes(vocabSearch.toLowerCase()) || v.es.toLowerCase().includes(vocabSearch.toLowerCase()))
+                  .map((item, idx) => (
+                    <div key={idx} className="clay-card-big p-4 space-y-2 border-2 border-[#FFD6DE]">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-black text-[#3D352E]">{item.en}</span>
+                        <button
+                          onClick={() => speakEnglish(item.en)}
+                          className="w-8 h-8 rounded-full bg-[#FFFFFF] clay-icon-big flex items-center justify-center text-xs shrink-0 hover:scale-110 active:scale-95 transition-transform"
+                          title="Escuchar pronunciación"
+                        >
+                          🔊
+                        </button>
+                      </div>
+                      <div className="text-[11px] text-[#8C341E] font-bold">
+                        ⚠️ Parece: <span className="line-through">{item.parece}</span>
+                      </div>
+                      <div className="text-xs text-[#1E523A] font-black">
+                        ✅ Realmente significa: {item.es}
+                      </div>
+                      <div className="clay-inset-pill p-2 text-[11px] text-[#5C524A] font-medium italic">
+                        &quot;{item.ejemplo}&quot;
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ========================================================= */}
+        {/* FLASHCARDS ACTIVAS */}
+        {/* ========================================================= */}
+        {activeTab === 'flashcards' && (
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h1 className="text-2xl font-black text-[#3D352E] tracking-tight flex items-center gap-2">
+                  Smart Flashcards (A0 a C2) <span>🌷</span>
+                </h1>
+                <p className="text-[#7A6E63] text-xs mt-1">Repaso activo con tarjetas táctiles tridimensionales y voz nativa.</p>
+              </div>
+
+              <div className="flex gap-1.5 overflow-x-auto pb-1">
+                {['TODOS', 'A0-A1', 'A2-B1', 'B2-C2'].map(filter => (
+                  <button
+                    key={filter}
+                    onClick={() => {
+                      playPopSound();
+                      setCardLevelFilter(filter);
+                      setCardIndex(0);
+                      setShowAnswer(false);
+                    }}
+                    className={`px-3 py-1.5 rounded-full text-[10px] font-black transition-all ${
+                      cardLevelFilter === filter
+                        ? 'bg-[#FFD6DE] text-[#A84A60] clay-icon-big font-extrabold'
+                        : 'bg-[#FFFFFF] text-[#8C7E72] hover:bg-[#F3ECE1]'
+                    }`}
+                  >
+                    {filter}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div
+              onClick={() => {
+                playPopSound();
+                setShowAnswer(!showAnswer);
+              }}
+              className="clay-card-big p-10 sm:p-14 text-center cursor-pointer hover:scale-[1.01] transition-all min-h-[240px] flex flex-col items-center justify-center space-y-3.5 relative"
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-black uppercase px-3.5 py-1 rounded-full bg-[#FFD6DE] text-[#A84A60] clay-icon-big inline-block">
+                  {activeCard.lvl} • {activeCard.cat}
+                </span>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    speakEnglish(activeCard.front);
+                  }}
+                  className="w-8 h-8 rounded-full bg-[#FFFFFF] clay-icon-big flex items-center justify-center text-xs hover:scale-110 active:scale-95 transition-transform"
+                  title="Escuchar pronunciación nativa"
+                >
+                  🔊
+                </button>
+              </div>
+
+              <div className="text-xl sm:text-2xl font-black text-[#3D352E]">
+                {showAnswer ? activeCard.back : activeCard.front}
+              </div>
+              <span className="text-[11px] text-[#A89C90] font-bold">
+                {showAnswer ? '💡 Regla y significado' : '👆 Toca la tarjeta para voltear'}
+              </span>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  playPopSound();
+                  setShowAnswer(false);
+                  setCardIndex(prev => prev + 1);
+                }}
+                className="flex-1 py-3.5 rounded-[20px] bg-[#FFFFFF] text-[#5C524A] font-black text-xs clay-icon-big"
               >
-                Abrir Speak & Improve ↗
-              </a>
+                ➡️ Siguiente Tarjeta
+              </button>
+              <button
+                onClick={() => {
+                  playChimeSound();
+                  setXp(prev => prev + 20);
+                  setFavoritesCount(prev => prev + 1);
+                  setWaterDrops(prev => prev + 1);
+                  setQuestCards(true);
+                  setShowAnswer(false);
+                  setCardIndex(prev => prev + 1);
+                  showSaveNotice('🎉 ¡Tarjeta dominada! +20 XP y +1 💧');
+                }}
+                className="flex-1 py-3.5 rounded-[20px] bg-[#52B788] text-white font-black text-xs clay-icon-big"
+              >
+                ✅ ¡La domino! (+20 XP)
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================= */}
+        {/* QUIZZES & EVALUACIONES */}
+        {/* ========================================================= */}
+        {activeTab === 'quizzes' && (
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h1 className="text-2xl font-black text-[#3D352E] tracking-tight flex items-center gap-2">
+                  Quizzes & Evaluaciones <span>🧁</span>
+                </h1>
+                <p className="text-[#7A6E63] text-xs mt-1">Preguntas de diagnóstico progresivas de A0 a C1 con audio nativo y retroalimentación.</p>
+              </div>
+              <div className="clay-inset-pill px-4 py-1.5 text-xs font-black text-[#6B5E55] self-start sm:self-auto">
+                Pregunta {currentQuizIdx + 1} de {quizList.length}
+              </div>
             </div>
 
             <div className="clay-card-big p-6 sm:p-7 space-y-4">
-              <label className="block text-xs font-black text-[#3D352E]">
-                Escribe aquí tu frase o respuesta en inglés para evaluar gramática y pronunciación:
-              </label>
-              <textarea
-                value={speakingText}
-                onChange={e => setSpeakingText(e.target.value)}
-                placeholder="Ejemplo: Introduce yourself: your name, where you live, and your age. (A0)"
-                rows={4}
-                className="w-full clay-inset-pill p-4 text-xs text-[#3D352E] placeholder-[#A3978C] focus:outline-none transition-all font-medium"
-              />
-              <button
-                onClick={handleAnalyzeSpeaking}
-                disabled={analyzing}
-                className="w-full py-3.5 rounded-[20px] bg-[#D9EBD9] hover:bg-[#C5E3C5] text-[#1E523A] font-black text-xs clay-icon-big disabled:opacity-50"
-              >
-                {analyzing ? 'Analizando con IA...' : '✨ Analizar y Corregir con IA (+50 XP)'}
-              </button>
+              <div className="flex justify-between items-center">
+                <span className="text-[10px] font-black uppercase px-3 py-1 rounded-full bg-[#D4EBF8] text-[#1E6091] clay-icon-big inline-block">
+                  {quizList[currentQuizIdx].level}
+                </span>
+                <span className="text-[11px] font-bold text-[#8C7E72]">
+                  Aciertos: +30 XP y +1 💧
+                </span>
+              </div>
 
-              {feedback && (
-                <div className="clay-inset-pill p-5 text-xs whitespace-pre-line text-[#403833] leading-relaxed font-medium bg-[#FAF6F0]">
-                  {feedback}
+              <div className="flex items-start justify-between gap-3">
+                <div className="text-sm sm:text-base font-black text-[#3D352E] leading-snug">
+                  {quizList[currentQuizIdx].question}
+                </div>
+                <button
+                  onClick={() => speakEnglish(quizList[currentQuizIdx].question)}
+                  className="w-8 h-8 rounded-full bg-[#FFFFFF] clay-icon-big flex items-center justify-center text-xs shrink-0 hover:scale-110 active:scale-95 transition-transform"
+                  title="Escuchar la pregunta en inglés"
+                >
+                  🔊
+                </button>
+              </div>
+
+              <div className="space-y-2.5 pt-1">
+                {quizList[currentQuizIdx].options.map((op, idx) => {
+                  const isSelected = selectedAnswer === op.text;
+                  let btnStyle = "bg-[#FFFFFF] text-[#4A4139] border-[#E8DFC8]";
+                  
+                  if (selectedAnswer !== null) {
+                    if (op.correct) {
+                      btnStyle = "bg-[#D9EBD9] text-[#1E523A] border-[#74C69D] font-extrabold";
+                    } else if (isSelected && !op.correct) {
+                      btnStyle = "bg-[#FFD6DE] text-[#A84A60] border-[#FCA5A5] font-extrabold";
+                    } else {
+                      btnStyle = "bg-[#F3EFE6] text-[#A89F91] border-transparent opacity-60";
+                    }
+                  }
+
+                  return (
+                    <div key={idx} className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleSelectQuizOption(op)}
+                        disabled={selectedAnswer !== null}
+                        className={`flex-1 text-left p-3.5 rounded-[20px] text-xs font-black transition-all border clay-icon-big ${btnStyle}`}
+                      >
+                        <span className="flex items-center gap-2.5">
+                          <span className="w-6 h-6 rounded-full bg-white/80 flex items-center justify-center text-[10px] font-black text-[#7A6E63] shadow-sm shrink-0">
+                            {String.fromCharCode(65 + idx)}
+                          </span>
+                          <span>{op.text}</span>
+                        </span>
+                      </button>
+                      <button
+                        onClick={() => speakEnglish(op.text)}
+                        className="w-9 h-9 rounded-[14px] bg-[#FFFFFF] clay-icon-big flex items-center justify-center text-xs shrink-0 hover:scale-110 active:scale-95 transition-transform"
+                        title="Escuchar opción"
+                      >
+                        🔊
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {selectedAnswer !== null && (
+                <div className="space-y-3 pt-2">
+                  <div className={`p-4 rounded-[20px] text-xs font-bold clay-inset-pill leading-relaxed ${
+                    isAnswerCorrect ? 'text-[#1E523A] bg-[#D9EBD9]' : 'text-[#A84A60] bg-[#FFD6DE]'
+                  }`}>
+                    <div className="font-black text-sm mb-0.5">
+                      {isAnswerCorrect ? '🎉 ¡Respuesta Correcta!' : '❌ Incorrecto'}
+                    </div>
+                    {quizList[currentQuizIdx].explanation}
+                  </div>
+
+                  <div className="flex gap-3 pt-1">
+                    <button
+                      onClick={handleNextQuiz}
+                      className="flex-1 py-3.5 rounded-[20px] clay-btn-pink text-xs font-black flex items-center justify-center gap-2"
+                    >
+                      <span>➡️</span> {currentQuizIdx + 1 === quizList.length ? 'Comenzar de Nuevo' : 'Siguiente Pregunta'}
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
