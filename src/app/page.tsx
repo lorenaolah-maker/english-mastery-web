@@ -3,38 +3,72 @@
 import React, { useState, useEffect } from 'react';
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState('cursos');
+  const [activeTab, setActiveTab] = useState('pomodoro');
   
-  // Métricas desde cero (persistentes en tu dispositivo)
+  // Métricas persistentes
   const [xp, setXp] = useState(0);
   const [streak, setStreak] = useState(1);
   const [totalMinutes, setTotalMinutes] = useState(0);
   const [favoritesCount, setFavoritesCount] = useState(0);
-  const [plantStage, setPlantStage] = useState(1); // 1: 🌱, 2: 🌿, 3: 🪴, 4: 🌸, 5: 🌳
+  
+  // Sistema de Jardín y Planta Viva
+  const [waterDrops, setWaterDrops] = useState(3);
+  const [plantStage, setPlantStage] = useState(1); // 1 a 5
+
+  // Misiones Diarias (Quests)
+  const [questPomo, setQuestPomo] = useState(false);
+  const [questCards, setQuestCards] = useState(false);
+  const [questListening, setQuestListening] = useState(false);
+  const [questClaimed, setQuestClaimed] = useState(false);
+
+  // Frase inspiracional diaria
+  const [quoteIdx, setQuoteIdx] = useState(0);
+  const quotes = [
+    { en: "“Small daily improvements over time lead to stunning results.”", es: "Pequeñas mejoras diarias con el tiempo producen resultados asombrosos." },
+    { en: "“Fluency is not about perfection, it's about connection and courage.”", es: "La fluidez no es perfección, es conexión y confianza." },
+    { en: "“You don't need hours a day, just 20 focused minutes of genuine curiosity.”", es: "No necesitas horas al día, solo 20 minutos con auténtica curiosidad." },
+    { en: "“Every word you learn today builds the tomorrow you desire.”", es: "Cada palabra aprendida hoy construye el mañana que deseas." }
+  ];
 
   // Cargar datos guardados
   useEffect(() => {
-    const savedXp = localStorage.getItem('em_xp');
-    const savedMins = localStorage.getItem('em_mins');
-    const savedStreak = localStorage.getItem('em_streak');
-    const savedFavs = localStorage.getItem('em_favs');
-    const savedPlant = localStorage.getItem('em_plant');
-    if (savedXp !== null) setXp(Number(savedXp));
-    if (savedMins !== null) setTotalMinutes(Number(savedMins));
-    if (savedStreak !== null) setStreak(Number(savedStreak));
-    if (savedFavs !== null) setFavoritesCount(Number(savedFavs));
-    if (savedPlant !== null) setPlantStage(Number(savedPlant));
+    const sXp = localStorage.getItem('em_xp');
+    const sMins = localStorage.getItem('em_mins');
+    const sStreak = localStorage.getItem('em_streak');
+    const sFavs = localStorage.getItem('em_favs');
+    const sWater = localStorage.getItem('em_water');
+    const sPlant = localStorage.getItem('em_plant');
+    const sQP = localStorage.getItem('em_qp');
+    const sQC = localStorage.getItem('em_qc');
+    const sQL = localStorage.getItem('em_ql');
+    const sClaimed = localStorage.getItem('em_claimed');
+
+    if (sXp !== null) setXp(Number(sXp));
+    if (sMins !== null) setTotalMinutes(Number(sMins));
+    if (sStreak !== null) setStreak(Number(sStreak));
+    if (sFavs !== null) setFavoritesCount(Number(sFavs));
+    if (sWater !== null) setWaterDrops(Number(sWater));
+    if (sPlant !== null) setPlantStage(Number(sPlant));
+    if (sQP === 'true') setQuestPomo(true);
+    if (sQC === 'true') setQuestCards(true);
+    if (sQL === 'true') setQuestListening(true);
+    if (sClaimed === 'true') setQuestClaimed(true);
   }, []);
 
-  // Guardar automáticamente
+  // Guardar datos automáticamente
   useEffect(() => {
     localStorage.setItem('em_xp', xp.toString());
     localStorage.setItem('em_mins', totalMinutes.toString());
     localStorage.setItem('em_streak', streak.toString());
     localStorage.setItem('em_favs', favoritesCount.toString());
+    localStorage.setItem('em_water', waterDrops.toString());
     localStorage.setItem('em_plant', plantStage.toString());
-  }, [xp, totalMinutes, streak, favoritesCount, plantStage]);
-  
+    localStorage.setItem('em_qp', questPomo.toString());
+    localStorage.setItem('em_qc', questCards.toString());
+    localStorage.setItem('em_ql', questListening.toString());
+    localStorage.setItem('em_claimed', questClaimed.toString());
+  }, [xp, totalMinutes, streak, favoritesCount, waterDrops, plantStage, questPomo, questCards, questListening, questClaimed]);
+
   // Pomodoro Timer State
   const [pomoMinutes, setPomoMinutes] = useState(15);
   const [timeLeft, setTimeLeft] = useState(15 * 60);
@@ -87,9 +121,9 @@ export default function Home() {
       const earnedXp = pomoMinutes * 10;
       setXp(prev => prev + earnedXp);
       setTotalMinutes(prev => prev + pomoMinutes);
-      // Hacer crecer la planta de enfoque
-      setPlantStage(prev => Math.min(prev + 1, 5));
-      showSaveNotice(`🎉 ¡Bloque de ${pomoMinutes}m completado! +${earnedXp} XP 🪴 ¡Tu planta ha crecido!`);
+      setWaterDrops(prev => prev + 2);
+      setQuestPomo(true);
+      showSaveNotice(`🎉 ¡Sesión de ${pomoMinutes}m completada! +${earnedXp} XP y +2 💧 Gotitas de agua ganadas.`);
     }
     return () => clearInterval(timer);
   }, [isRunning, timeLeft, pomoMinutes]);
@@ -100,25 +134,36 @@ export default function Home() {
     setIsRunning(true);
   };
 
-  const plantIcons = ['🌱', '🌿', '🪴', '🌸', '🌳'];
-  const plantNames = [
-    'Semilla Brotando 🌱',
-    'Brote Saludable 🌿',
-    'Planta en Crecimiento 🪴',
-    'Flor en Pleno Florecimiento 🌸',
-    'Árbol Dorado de Sabiduría 🌳'
+  const plantData = [
+    { icon: '🌱', name: 'Semillita Brotando', desc: 'Regada con tus primeros minutos de inmersión auditiva.' },
+    { icon: '🌿', name: 'Brote Fuerte', desc: 'Creciendo con consistencia y práctica diaria.' },
+    { icon: '🪴', name: 'Planta de Focus', desc: '¡Llena de energía y hojas verdes por tu concentración!' },
+    { icon: '🌸', name: 'Flor Florecida', desc: 'Tu vocabulario florece con cada sesión y tarjeta dominada.' },
+    { icon: '🌳', name: 'Árbol Sabio Dorado', desc: '¡Maestría consolidada! Fluidez y soltura bilingüe.' }
   ];
+
+  const handleWaterPlant = () => {
+    if (waterDrops > 0) {
+      setWaterDrops(prev => prev - 1);
+      setPlantStage(prev => (prev < 5 ? prev + 1 : 1));
+      setXp(prev => prev + 25);
+      showSaveNotice(`💧 ¡Regaste tu planta! +25 XP ✨ Vitalidad al 100%`);
+    } else {
+      showSaveNotice('🌧️ Necesitas gotitas de agua. Completa un Pomodoro o domina flashcards para ganar más.');
+    }
+  };
 
   const handleAnalyzeSpeaking = () => {
     if (!speakingText.trim()) return;
     setAnalyzing(true);
     setTimeout(() => {
       setFeedback(
-        "🎯 Puntuación Global: 9.4/10 🌸\n\n🔍 Análisis Gramatical: Excelente precisión sintáctica y concordancia.\n\n✨ Versión Nivel Nativo: 'I genuinely enjoy building consistent learning habits every single day.'\n\n🗣️ Fonética sugerida: Thoroughly (THUR-uh-lee) — enlaza sonidos consonante + vocal con cadencia fluida.\n\n💡 Consejo Kawaii: ¡Vas a un ritmo perfecto! Mantén la cadencia sin frenar."
+        "🎯 Puntuación Global: 9.6/10 🌸\n\n🔍 Análisis Gramatical: Excelente estructura y tiempo verbal correcto.\n\n✨ Versión Nivel Nativo: 'I genuinely enjoy building consistent learning habits every single day.'\n\n🗣️ Fonética sugerida: Thoroughly (THUR-uh-lee) — enlaza sonidos sin frenar el flujo.\n\n💡 Tip de Fluidez: Tu cadencia es muy natural, continúa respondiendo en voz alta."
       );
       setAnalyzing(false);
       setXp(prev => prev + 50);
-      showSaveNotice('💖 ¡Speaking corregido con IA! +50 XP');
+      setWaterDrops(prev => prev + 1);
+      showSaveNotice('💖 ¡Speaking corregido con IA! +50 XP y +1 💧');
     }, 1200);
   };
 
@@ -127,17 +172,27 @@ export default function Home() {
     setIsWritingAnalyzing(true);
     setTimeout(() => {
       setWritingFeedback(
-        "📝 Diagnóstico Editorial de Redacción:\n\n✨ Versión Pulida: 'Consistency is the true cornerstone of language fluency. Dedicating twenty focused minutes daily yields significantly better results than cramming once a week.'\n\n💎 Vocabulario Elevado Empleado:\n• Cornerstone (Piedra angular / base)\n• Yields (Produce / genera resultados)\n• Cramming (Estudiar de golpe apresurado)\n\n📌 Guardado: Registro sincronizado automáticamente con tu Notion."
+        "📝 Diagnóstico Editorial de Redacción:\n\n✨ Versión Pulida: 'Consistency is the true cornerstone of language fluency. Dedicating twenty focused minutes daily yields significantly better results than cramming once a week.'\n\n💎 Vocabulario Elevado Empleado:\n• Cornerstone (Piedra angular / base sólida)\n• Yields (Produce resultados tangibles)\n• Cramming (Estudio apresurado de último momento)\n\n📌 Guardado: Registro sincronizado automáticamente con tu Notion."
       );
       setIsWritingAnalyzing(false);
       setXp(prev => prev + 60);
-      showSaveNotice('📖 ¡Escrito analizado y guardado! +60 XP');
+      setWaterDrops(prev => prev + 1);
+      showSaveNotice('📖 ¡Escrito analizado y guardado! +60 XP y +1 💧');
     }, 1200);
   };
 
   const showSaveNotice = (msg: string) => {
     setSavedNotice(msg);
-    setTimeout(() => setSavedNotice(null), 3500);
+    setTimeout(() => setSavedNotice(null), 3800);
+  };
+
+  const handleClaimReward = () => {
+    if (questPomo && questCards && questListening && !questClaimed) {
+      setQuestClaimed(true);
+      setXp(prev => prev + 100);
+      setWaterDrops(prev => prev + 3);
+      showSaveNotice('🎁 ¡Cofre diario desbloqueado! +100 XP y +3 💧 Gotitas de Agua');
+    }
   };
 
   return (
@@ -196,10 +251,10 @@ export default function Home() {
         }
       `}</style>
 
-      {/* BARRA LATERAL SALVIA / MENTA SUAVE */}
+      {/* BARRA LATERAL SALVIA */}
       <aside className="w-76 shrink-0 bg-[#DCECE7] p-5 flex flex-col justify-between border-r border-[#CFE1DC] shadow-[6px_0_24px_rgba(180,200,195,0.2)]">
         <div>
-          {/* PERFIL AVATAR KAWAII */}
+          {/* AVATAR CON EFECTO 3D */}
           <div className="clay-card-big p-3.5 mb-5 flex items-center gap-3 bg-[#FFFFFF]/90">
             <div className="relative w-14 h-14 rounded-[24px] p-1 bg-[#DCECE7] clay-icon-big flex items-center justify-center shrink-0">
               <div className="w-full h-full rounded-[18px] overflow-hidden bg-[#FFD8CC] flex items-center justify-center font-bold text-[#A84A32]">
@@ -269,7 +324,7 @@ export default function Home() {
           </nav>
         </div>
 
-        {/* CARD INFERIOR GOODNOTES CON CUADERNITO DIGITAL */}
+        {/* ACCESO A GOODNOTES */}
         <div className="pt-3 border-t border-[#CFE1DC]">
           <div className="clay-card-big p-4 bg-gradient-to-br from-[#FFE8DF] via-[#FFD8CC] to-[#FFCAD4] border-2 border-[#FFCCD5] flex flex-col items-center text-center relative overflow-hidden">
             <div className="w-12 h-12 rounded-2xl bg-[#FFE4D6] clay-icon-big flex items-center justify-center text-xl mb-1 shadow-inner">
@@ -287,9 +342,9 @@ export default function Home() {
         </div>
       </aside>
 
-      {/* ÁREA DE CONTENIDO PRINCIPAL */}
+      {/* CONTENIDO PRINCIPAL */}
       <main className="flex-1 p-6 md:p-8 max-w-4xl mx-auto overflow-y-auto">
-        {/* TOAST FLOTANTE */}
+        {/* NOTIFICACIÓN FLOTANTE */}
         {savedNotice && (
           <div className="fixed top-5 right-5 z-50 clay-card-big bg-[#D8F3DC] text-[#1B4332] font-black text-xs px-5 py-3.5 border-2 border-[#B7E4C7] shadow-xl animate-bounce flex items-center gap-2">
             <span>🌸</span>
@@ -298,7 +353,7 @@ export default function Home() {
         )}
 
         {/* CABECERA SUPERIOR */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-5">
           <div className="text-xl font-black text-[#3D352E] tracking-tight">
             Dashboard
           </div>
@@ -313,7 +368,10 @@ export default function Home() {
               />
             </div>
 
-            <button className="w-10 h-10 rounded-full bg-[#FFFFFF] clay-icon-big flex items-center justify-center text-sm relative">
+            <button
+              onClick={() => showSaveNotice('🔔 Todas tus metas y repasos van al día con tu semana.')}
+              className="w-10 h-10 rounded-full bg-[#FFFFFF] clay-icon-big flex items-center justify-center text-sm relative"
+            >
               🔔
               <span className="w-2 h-2 rounded-full bg-[#FF856D] absolute top-2 right-2 ring-2 ring-white"></span>
             </button>
@@ -321,12 +379,13 @@ export default function Home() {
         </div>
 
         {/* ========================================================= */}
-        {/* 1. FOCUS & POMODORO CON PLANTA INTERACTIVA */}
+        {/* 1. FOCUS & POMODORO CON PLANTA VIVA Y DAILY QUESTS */}
         {/* ========================================================= */}
         {activeTab === 'pomodoro' && (
           <div className="space-y-6">
-            <div className="clay-card-big p-6 sm:p-7 bg-gradient-to-r from-[#FFF2EB] via-[#FFF8F3] to-[#FFFFFF] flex items-center justify-between relative overflow-hidden border border-[#F3E2D8]">
-              <div className="space-y-2 z-10">
+            {/* BANNER PRINCIPAL CON PLANTA VIVA INTERACTIVA */}
+            <div className="clay-card-big p-6 sm:p-7 bg-gradient-to-r from-[#FFF2EB] via-[#FFF8F3] to-[#FFFFFF] flex flex-col sm:flex-row items-center justify-between gap-5 relative overflow-hidden border border-[#F3E2D8]">
+              <div className="space-y-2 z-10 w-full sm:w-auto">
                 <div className="flex items-center gap-2 text-xs font-black text-[#8C341E]">
                   <span>Good Morning, Lorena!</span>
                   <span>☀️</span>
@@ -337,33 +396,55 @@ export default function Home() {
                 <p className="text-xs text-[#7A6E63] max-w-md font-medium">
                   Comienza tu semana de estudio con bloques de 15 a 20 minutos de inmersión y enfoque.
                 </p>
-                <div className="pt-1.5 flex gap-3">
+                <div className="pt-2 flex flex-wrap gap-2.5">
                   <button
                     onClick={() => handleStartTimer(15)}
-                    className="px-6 py-2.5 rounded-[20px] clay-btn-orange text-xs font-black flex items-center gap-2"
+                    className="px-5 py-2.5 rounded-[20px] clay-btn-orange text-xs font-black flex items-center gap-2"
                   >
-                    <span>▶</span> Play Something (15 Min)
+                    <span>▶</span> Play Focus (15 Min)
+                  </button>
+                  <button
+                    onClick={handleWaterPlant}
+                    className="px-4 py-2.5 rounded-[20px] bg-[#E0F2FE] hover:bg-[#BAE6FD] text-[#0369A1] clay-icon-big text-xs font-black flex items-center gap-1.5"
+                  >
+                    <span>💧</span> Regar Jardín ({waterDrops})
                   </button>
                 </div>
               </div>
 
-              {/* DETALLE TIERNO EN RELIEVE CON PLANTA VIVA INTERACTIVA */}
-              <div className="flex items-center gap-3 pr-2">
+              {/* JARDÍN INTERACTIVO */}
+              <div className="flex items-center gap-3">
                 <div className="w-20 h-20 rounded-[28px] bg-[#FFE8DF] clay-icon-big flex items-center justify-center text-4xl shadow-inner">
                   🎧
                 </div>
                 <div
-                  onClick={() => showSaveNotice(`🪴 ${plantNames[plantStage - 1]} • Nivel ${plantStage}/5 de vitalidad con tus sesiones.`)}
-                  className="w-18 h-20 rounded-[24px] bg-[#E8F4EE] clay-icon-big flex flex-col items-center justify-center cursor-pointer hover:scale-105 transition-transform"
-                  title="Toca tu planta de enfoque"
+                  onClick={handleWaterPlant}
+                  className="w-22 h-24 rounded-[26px] bg-[#E8F4EE] clay-icon-big p-2 flex flex-col items-center justify-center cursor-pointer hover:scale-105 transition-all text-center border-2 border-[#C7E9D6]"
+                  title="Toca para regar tu planta con tus gotitas"
                 >
-                  <span className="text-3xl">{plantIcons[plantStage - 1]}</span>
-                  <span className="text-[9px] font-black text-[#2D6A4F] mt-0.5">Nivel {plantStage}</span>
+                  <span className="text-3xl animate-bounce">{plantData[plantStage - 1].icon}</span>
+                  <span className="text-[9px] font-black text-[#2D6A4F] mt-1 line-clamp-1">{plantData[plantStage - 1].name}</span>
+                  <span className="text-[8px] text-[#40916C] font-bold">Nivel {plantStage}/5</span>
                 </div>
               </div>
             </div>
 
-            {/* 4 TARJETAS PASTEL REINICIADAS EN CERO */}
+            {/* FRASE INSPIRACIONAL TÁCTIL */}
+            <div
+              onClick={() => setQuoteIdx((quoteIdx + 1) % quotes.length)}
+              className="clay-card-big p-4 bg-[#FFF9F2] border border-[#F6E1D3] cursor-pointer hover:scale-[1.01] transition-transform flex items-center gap-3"
+            >
+              <span className="w-10 h-10 rounded-2xl bg-[#FFE4D6] clay-icon-big flex items-center justify-center text-xl shrink-0">
+                💬
+              </span>
+              <div className="flex-1 min-w-0">
+                <div className="text-xs font-black text-[#6B3728]">{quotes[quoteIdx].en}</div>
+                <div className="text-[11px] text-[#8C6D62] font-medium mt-0.5">{quotes[quoteIdx].es}</div>
+              </div>
+              <span className="text-[10px] text-[#A88B7E] font-bold shrink-0">Toca para cambiar 🔄</span>
+            </div>
+
+            {/* 4 TARJETAS PASTEL INICIADAS DESDE CERO */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
               {[
                 { label: 'Songs / XP', val: `${xp}`, sub: 'Iniciando semana', bg: 'bg-[#D8F3DC]', icon: '🎵', text: 'text-[#1B4332]' },
@@ -382,6 +463,79 @@ export default function Home() {
                   </div>
                 </div>
               ))}
+            </div>
+
+            {/* MISIONES DIARIAS / DAILY QUESTS */}
+            <div className="clay-card-big p-5 sm:p-6 space-y-3.5 border border-[#E8DFC8]">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">🎯</span>
+                  <span className="font-black text-sm text-[#3D352E]">Reto Diario: 3 Victorias Hoy</span>
+                </div>
+                <button
+                  onClick={handleClaimReward}
+                  disabled={!(questPomo && questCards && questListening) || questClaimed}
+                  className={`px-4 py-1.5 rounded-full text-xs font-black clay-icon-big transition-all ${
+                    questClaimed
+                      ? 'bg-[#E5E7EB] text-[#9CA3AF]'
+                      : (questPomo && questCards && questListening)
+                        ? 'bg-[#FFD8CC] text-[#8C341E] animate-pulse'
+                        : 'bg-[#F3EFE6] text-[#A89F91]'
+                  }`}
+                >
+                  {questClaimed ? '✅ Reclamado (+100 XP)' : (questPomo && questCards && questListening) ? '🎁 ¡Abrir Cofre!' : 'Completa las 3'}
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div
+                  onClick={() => {
+                    setQuestPomo(!questPomo);
+                    showSaveNotice(questPomo ? 'Bloque desmarcado' : '⏱️ ¡Meta de Focus marcada!');
+                  }}
+                  className={`p-3.5 rounded-[22px] clay-icon-big cursor-pointer flex items-center gap-3 ${
+                    questPomo ? 'bg-[#D8F3DC] text-[#1B4332]' : 'bg-[#FFFFFF] text-[#6B5E55]'
+                  }`}
+                >
+                  <span className="text-xl">{questPomo ? '✅' : '⏳'}</span>
+                  <div className="min-w-0">
+                    <div className="text-xs font-black">1 Bloque de Focus</div>
+                    <div className="text-[10px] opacity-80">15 min de estudio</div>
+                  </div>
+                </div>
+
+                <div
+                  onClick={() => {
+                    setQuestCards(!questCards);
+                    showSaveNotice(questCards ? 'Meta desmarcada' : '🗂️ ¡Meta de Flashcards marcada!');
+                  }}
+                  className={`p-3.5 rounded-[22px] clay-icon-big cursor-pointer flex items-center gap-3 ${
+                    questCards ? 'bg-[#D8F3DC] text-[#1B4332]' : 'bg-[#FFFFFF] text-[#6B5E55]'
+                  }`}
+                >
+                  <span className="text-xl">{questCards ? '✅' : '🗂️'}</span>
+                  <div className="min-w-0">
+                    <div className="text-xs font-black">Repasar Flashcards</div>
+                    <div className="text-[10px] opacity-80">Dominar 1 tarjeta</div>
+                  </div>
+                </div>
+
+                <div
+                  onClick={() => {
+                    setQuestListening(!questListening);
+                    showSaveNotice(questListening ? 'Meta desmarcada' : '🎧 ¡Meta de Listening marcada!');
+                  }}
+                  className={`p-3.5 rounded-[22px] clay-icon-big cursor-pointer flex items-center gap-3 ${
+                    questListening ? 'bg-[#D8F3DC] text-[#1B4332]' : 'bg-[#FFFFFF] text-[#6B5E55]'
+                  }`}
+                >
+                  <span className="text-xl">{questListening ? '✅' : '🎧'}</span>
+                  <div className="min-w-0">
+                    <div className="text-xs font-black">Inmersión Auditiva</div>
+                    <div className="text-[10px] opacity-80">Listening o YouGlish</div>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* BARRA DE RANGO EN NIVEL 1 */}
@@ -419,7 +573,11 @@ export default function Home() {
                   { icon: '🔥', title: 'Warming Up', bg: 'bg-[#FFD8CC]', label: 'En racha' },
                   { icon: '📖', title: 'Module Down', bg: 'bg-[#EEDEF8]', label: 'Módulo listo' },
                 ].map((b, idx) => (
-                  <div key={idx} className="clay-card-big p-4 flex flex-col items-center text-center">
+                  <div
+                    key={idx}
+                    onClick={() => showSaveNotice(`🏆 Logro: ${b.title} (${b.label}) activo en tu perfil.`)}
+                    className="clay-card-big p-4 flex flex-col items-center text-center cursor-pointer hover:scale-105 transition-transform"
+                  >
                     <div className={`w-14 h-14 ${b.bg} clay-icon-big rounded-[22px] flex items-center justify-center text-2xl mb-2`}>
                       {b.icon}
                     </div>
@@ -543,7 +701,7 @@ export default function Home() {
         )}
 
         {/* ========================================================= */}
-        {/* 3. BIBLIOTECA DE CURSOS (BOTONES REAJUSTADOS Y CONTENIDOS AL 100%) */}
+        {/* 3. BIBLIOTECA DE CURSOS (BOTONES AJUSTADOS RESPONSIVOS) */}
         {/* ========================================================= */}
         {activeTab === 'cursos' && (
           <div className="space-y-6">
@@ -552,7 +710,7 @@ export default function Home() {
                 <h1 className="text-2xl font-black text-[#3D352E] tracking-tight flex items-center gap-2">
                   Biblioteca de Cursos <span>📚</span>
                 </h1>
-                <p className="text-[#7A6E63] text-xs mt-1">Tus 3 programas de inglés con accesos rápidos, guías y control de avance.</p>
+                <p className="text-[#7A6E63] text-xs mt-1">Tus 3 programas de inglés con accesos directos y control de avance semanal.</p>
               </div>
               <a
                 href="https://consumer.hotmart.com"
@@ -591,7 +749,7 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* FILA DE GUARDADO AJUSTADA RESPONSIVA */}
+              {/* FILA DE CONTROL ADAPTABLE */}
               <div className="pt-3 border-t border-[#F3E7DC] flex flex-wrap sm:flex-nowrap items-center gap-2.5">
                 <span className="text-xs font-bold text-[#6D635B] whitespace-nowrap">Semana completada:</span>
                 <select
@@ -604,7 +762,10 @@ export default function Home() {
                   ))}
                 </select>
                 <button
-                  onClick={() => showSaveNotice(`✅ Inglés Práctico guardado en Semana ${ipWeek}`)}
+                  onClick={() => {
+                    setWaterDrops(prev => prev + 1);
+                    showSaveNotice(`✅ Inglés Práctico guardado en Semana ${ipWeek} (+1 💧)`);
+                  }}
                   className="px-5 py-2.5 rounded-[18px] bg-[#52B788] hover:bg-[#40916C] text-white font-black text-xs clay-icon-big whitespace-nowrap ml-auto sm:ml-0"
                 >
                   💾 Guardar Avance
@@ -640,7 +801,7 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* FILA DE GUARDADO AJUSTADA RESPONSIVA */}
+              {/* FILA DE CONTROL ADAPTABLE */}
               <div className="pt-3 border-t border-[#F3E7DC] flex flex-wrap sm:flex-nowrap items-center gap-2.5">
                 <span className="text-xs font-bold text-[#6D635B] whitespace-nowrap">Telenovela / Bloque:</span>
                 <input
@@ -654,7 +815,10 @@ export default function Home() {
                 <span className="text-xs text-[#8C7E72] font-semibold">de 130</span>
                 <div className="flex-1 hidden sm:block"></div>
                 <button
-                  onClick={() => showSaveNotice(`✅ Gringo Academy guardado en Telenovela ${gringoUnit}`)}
+                  onClick={() => {
+                    setWaterDrops(prev => prev + 1);
+                    showSaveNotice(`✅ Gringo Academy guardado en Telenovela ${gringoUnit} (+1 💧)`);
+                  }}
                   className="px-5 py-2.5 rounded-[18px] bg-[#38BDF8] hover:bg-[#0284C7] text-white font-black text-xs clay-icon-big whitespace-nowrap ml-auto sm:ml-0"
                 >
                   💾 Guardar Telenovela
@@ -690,7 +854,7 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* FILA DE GUARDADO AJUSTADA RESPONSIVA */}
+              {/* FILA DE CONTROL ADAPTABLE */}
               <div className="pt-3 border-t border-[#F3E7DC] flex flex-wrap sm:flex-nowrap items-center gap-2.5">
                 <span className="text-xs font-bold text-[#6D635B] whitespace-nowrap">Módulo activo:</span>
                 <select
@@ -703,7 +867,10 @@ export default function Home() {
                   ))}
                 </select>
                 <button
-                  onClick={() => showSaveNotice(`✅ Activación Neural guardada en Fase ${neuralWeek}`)}
+                  onClick={() => {
+                    setWaterDrops(prev => prev + 1);
+                    showSaveNotice(`✅ Activación Neural guardada en Fase ${neuralWeek} (+1 💧)`);
+                  }}
                   className="px-5 py-2.5 rounded-[18px] bg-[#A855F7] hover:bg-[#9333EA] text-white font-black text-xs clay-icon-big whitespace-nowrap ml-auto sm:ml-0"
                 >
                   💾 Guardar Fase
@@ -814,8 +981,9 @@ export default function Home() {
                 onClick={() => {
                   setXp(prev => prev + 30);
                   setTotalMinutes(prev => prev + 20);
-                  setPlantStage(prev => Math.min(prev + 1, 5));
-                  showSaveNotice('🎉 ¡20 min de Listening registrados! +30 XP 🪴 ¡Tu planta florece!');
+                  setWaterDrops(prev => prev + 2);
+                  setQuestListening(true);
+                  showSaveNotice('🎉 ¡20 min de Listening registrados! +30 XP y +2 💧');
                 }}
                 className="w-full sm:w-auto px-5 py-2.5 rounded-[18px] bg-[#52B788] hover:bg-[#40916C] text-white font-black text-xs clay-icon-big whitespace-nowrap"
               >
@@ -1048,9 +1216,11 @@ export default function Home() {
                 onClick={() => {
                   setXp(prev => prev + 20);
                   setFavoritesCount(prev => prev + 1);
+                  setWaterDrops(prev => prev + 1);
+                  setQuestCards(true);
                   setShowAnswer(false);
                   setCardIndex(prev => (prev + 1) % flashcards.length);
-                  showSaveNotice('🎉 ¡Tarjeta dominada! +20 XP');
+                  showSaveNotice('🎉 ¡Tarjeta dominada! +20 XP y +1 💧');
                 }}
                 className="flex-1 py-3.5 rounded-[20px] bg-[#52B788] text-white font-black text-xs clay-icon-big"
               >
@@ -1092,7 +1262,10 @@ export default function Home() {
                     onClick={() => {
                       setQuizAnswer(op.text);
                       setQuizScore(op.correct ? 100 : 0);
-                      if (op.correct) setXp(prev => prev + 30);
+                      if (op.correct) {
+                        setXp(prev => prev + 30);
+                        setWaterDrops(prev => prev + 1);
+                      }
                     }}
                     className={`w-full text-left p-3.5 rounded-[20px] text-xs font-black transition-all border ${op.border} ${
                       quizAnswer === op.text
@@ -1115,7 +1288,7 @@ export default function Home() {
               {quizScore !== null && (
                 <div className={`p-4 rounded-[20px] text-xs font-bold clay-inset-pill ${quizScore === 100 ? 'text-[#1B4332] bg-[#D8F3DC]' : 'text-[#8C341E] bg-[#FFD8CC]'}`}>
                   {quizScore === 100
-                    ? '🎉 ¡Correcto! En inglés la edad se ES con el verbo To Be, no se tiene (+30 XP).'
+                    ? '🎉 ¡Correcto! En inglés la edad se ES con el verbo To Be, no se tiene (+30 XP y +1 💧).'
                     : '❌ Incorrecto. Recuerda: en inglés nunca se usa "have" para la edad, sino el verbo To Be ("I am ... years old").'}
                 </div>
               )}
