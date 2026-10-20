@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState('pomodoro');
+  const [activeTab, setActiveTab] = useState('hub');
   
   // Métricas persistentes
   const [xp, setXp] = useState(0);
@@ -96,7 +96,6 @@ export default function Home() {
         const ctx = new AudioCtx();
         audioCtxRef.current = ctx;
 
-        // Generar ruido blanco filtrado simulando lluvia suave
         const bufferSize = ctx.sampleRate * 2;
         const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
         const output = buffer.getChannelData(0);
@@ -129,14 +128,27 @@ export default function Home() {
     }
   };
 
-  // Función de voz nativa Web Speech
+  // Función de voz nativa optimizada para Safari en iPadOS
   const speakEnglish = (text: string) => {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'en-US';
-      utterance.rate = 0.9;
-      window.speechSynthesis.speak(utterance);
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      try {
+        window.speechSynthesis.resume();
+        const cleanText = text.replace(/^[A-D]\s+/, '').trim();
+        const utterance = new SpeechSynthesisUtterance(cleanText);
+        utterance.lang = 'en-US';
+        utterance.rate = 0.85;
+        utterance.volume = 1;
+
+        const voices = window.speechSynthesis.getVoices();
+        const enVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Samantha') || v.name.includes('Siri') || v.name.includes('Google') || v.lang === 'en-US'));
+        if (enVoice) {
+          utterance.voice = enVoice;
+        }
+
+        window.speechSynthesis.speak(utterance);
+      } catch {
+        showSaveNotice('🔊 Error al activar altavoz en Safari');
+      }
     } else {
       showSaveNotice('🔊 Voz no soportada en este navegador');
     }
@@ -375,7 +387,7 @@ export default function Home() {
 
   return (
     <div className="flex min-h-screen bg-[#FBF6EF] text-[#4A4139] font-sans antialiased selection:bg-[#FFD1DC]">
-      {/* ESTILOS DE RELIEVE Y SOMBRAS 3D CLAY DE LA PALETA PLANNER */}
+      {/* ESTILOS DE RELIEVE Y SOMBRAS 3D CLAY */}
       <style jsx global>{`
         .clay-card-big {
           background: #FFFFFF;
@@ -556,7 +568,6 @@ export default function Home() {
         {/* ========================================================= */}
         {activeTab === 'pomodoro' && (
           <div className="space-y-6">
-            {/* BANNER PRINCIPAL */}
             <div className="clay-card-big p-6 sm:p-7 bg-gradient-to-r from-[#FFF4F6] via-[#FFF9F3] to-[#FFFFFF] flex flex-col sm:flex-row items-center justify-between gap-5 relative overflow-hidden border border-[#FADCD5]">
               <div className="space-y-2 z-10 w-full sm:w-auto">
                 <div className="flex items-center gap-2 text-xs font-black text-[#A84A60]">
@@ -593,7 +604,6 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* JARDÍN INTERACTIVO */}
               <div className="flex items-center gap-3">
                 <div className="w-20 h-20 rounded-[26px] bg-[#FFE8ED] clay-icon-big flex items-center justify-center text-4xl shadow-inner">
                   🎧
@@ -610,7 +620,7 @@ export default function Home() {
               </div>
             </div>
 
-            {/* FRASE INSPIRACIONAL TÁCTIL */}
+            {/* FRASE INSPIRACIONAL */}
             <div
               onClick={() => setQuoteIdx((quoteIdx + 1) % quotes.length)}
               className="clay-card-big p-4 bg-[#FFFBF0] border border-[#F5E6CA] cursor-pointer hover:scale-[1.01] transition-transform flex items-center gap-3"
@@ -625,7 +635,7 @@ export default function Home() {
               <span className="text-[10px] text-[#A89066] font-bold shrink-0">Toca para cambiar 🔄</span>
             </div>
 
-            {/* 4 TARJETAS PASTEL PLANNER */}
+            {/* TARJETAS PASTEL */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
               {[
                 { label: 'Songs / XP', val: `${xp}`, sub: 'Iniciando semana', bg: 'bg-[#D9EBD9]', icon: '🎵', text: 'text-[#1E523A]' },
@@ -646,7 +656,7 @@ export default function Home() {
               ))}
             </div>
 
-            {/* BARRA DE RANGO Y HEATMAP SEMANAL DE RACHA */}
+            {/* BARRA DE RANGO Y HEATMAP SEMANAL */}
             <div className="clay-card-big p-5 sm:p-6 space-y-4">
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2">
@@ -668,7 +678,7 @@ export default function Home() {
                 <span className="font-black text-[#FF85A1]">¡Comenzando con todo esta semana, Lorena! 🌷</span>
               </div>
 
-              {/* HEATMAP SEMANAL LUN-DOM */}
+              {/* HEATMAP */}
               <div className="pt-3 border-t border-[#F2E8DC]">
                 <div className="flex justify-between items-center mb-2.5">
                   <span className="text-xs font-black text-[#5C524A] flex items-center gap-1.5">
@@ -1093,7 +1103,7 @@ export default function Home() {
         )}
 
         {/* ========================================================= */}
-        {/* 4. HUB DE PLATAFORMAS (CON AVI UNAM GRATUITA) */}
+        {/* 4. HUB DE PLATAFORMAS CON CAMBRIDGE DICTIONARY REINCORPORADO */}
         {/* ========================================================= */}
         {activeTab === 'hub' && (
           <div className="space-y-6">
@@ -1105,6 +1115,7 @@ export default function Home() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {[
+                { title: 'Cambridge Dictionary', desc: 'Diccionario con audio británico y americano oficial y transcripción fonética IPA.', link: 'https://dictionary.cambridge.org', btn: 'Abrir Diccionario', icon: '📖', bg: 'bg-[#FFD6DE]', btnBg: 'bg-[#FF85A1] hover:bg-[#F26A8A] text-white' },
                 { title: 'AVI UNAM (Práctica Libre)', desc: 'Fichas gramaticales, audios y ejercicios de autoevaluación gratuitos de A1 a B2.', link: 'https://avi.cuaed.unam.mx/idioma-ingles.html', btn: 'Abrir AVI UNAM', icon: '🏛️', bg: 'bg-[#FFF1C5]', btnBg: 'bg-[#EAB308] hover:bg-[#CA8A04] text-white' },
                 { title: 'Speak & Improve (Cambridge)', desc: 'Evaluador acústico oficial de Cambridge con IA para medir tu nivel exacto.', link: 'https://speakandimprove.com', btn: 'Abrir Cambridge', icon: '🤖', bg: 'bg-[#FFD6DE]', btnBg: 'bg-[#FFAAA6] hover:bg-[#FF85A1] text-white' },
                 { title: 'Duolingo Web', desc: 'Práctica ágil de vocabulario y racha diaria de gramática interactiva.', link: 'https://www.duolingo.com', btn: 'Abrir Duolingo', icon: '🦉', bg: 'bg-[#D9EBD9]', btnBg: 'bg-[#52B788] hover:bg-[#40916C] text-white' },
@@ -1367,7 +1378,6 @@ export default function Home() {
                   <h3 className="text-base font-black text-[#3D352E]">Dominio Académico y Especializado</h3>
                   <ul className="text-xs text-[#52443C] space-y-2.5 leading-relaxed font-medium">
                     <li>• <strong>Gramática:</strong> Inversión gramatical enfática, lenguaje persuasivo y estilo formal.</li>
-                    <li>• <strong>Meta:</strong> Expresión espontánea sin búsqueda evidente de expresiones.</li>
                   </ul>
                 </>
               )}
@@ -1386,7 +1396,7 @@ export default function Home() {
         )}
 
         {/* ========================================================= */}
-        {/* 8. FLASHCARDS ACTIVAS CON AUDIO NATIVO Y FILTRO DE NIVELES */}
+        {/* 8. FLASHCARDS ACTIVAS */}
         {/* ========================================================= */}
         {activeTab === 'flashcards' && (
           <div className="space-y-6">
@@ -1398,7 +1408,6 @@ export default function Home() {
                 <p className="text-[#7A6E63] text-xs mt-1">Repaso activo con tarjetas táctiles tridimensionales y voz nativa.</p>
               </div>
 
-              {/* FILTROS POR NIVEL */}
               <div className="flex gap-1.5 overflow-x-auto pb-1">
                 {['TODOS', 'A0-A1', 'A2-B1', 'B2-C2'].map(filter => (
                   <button
@@ -1428,7 +1437,6 @@ export default function Home() {
                 <span className="text-[10px] font-black uppercase px-3.5 py-1 rounded-full bg-[#FFD6DE] text-[#A84A60] clay-icon-big inline-block">
                   {activeCard.lvl} • {activeCard.cat}
                 </span>
-                {/* BOTÓN DE AUDIO NATIVO EN FLASHCARD */}
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -1478,7 +1486,7 @@ export default function Home() {
         )}
 
         {/* ========================================================= */}
-        {/* 9. QUIZZES & EVALUACIONES (CON AUDIO NATIVO Y BOTÓN SIGUIENTE) */}
+        {/* 9. QUIZZES & EVALUACIONES */}
         {/* ========================================================= */}
         {activeTab === 'quizzes' && (
           <div className="space-y-6">
@@ -1558,7 +1566,7 @@ export default function Home() {
                 })}
               </div>
 
-              {/* RETROALIMENTACIÓN Y BOTÓN SIGUIENTE */}
+              {/* RETROALIMENTACIÓN */}
               {selectedAnswer !== null && (
                 <div className="space-y-3 pt-2">
                   <div className={`p-4 rounded-[20px] text-xs font-bold clay-inset-pill leading-relaxed ${
