@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { vocab200List, vocab500List, falseFriendsList } from './vocabularyData';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState('pomodoro');
@@ -122,7 +123,7 @@ export default function Home() {
   const [neuralWeek, setNeuralWeek] = useState(1);
   const [savedNotice, setSavedNotice] = useState<string | null>(null);
 
-  // Datos de la Planta Viva
+  // Planta Viva
   const plantData = [
     { icon: '🌱', name: 'Semillita Brotando', desc: 'Regada con tus primeros minutos de inmersión auditiva.' },
     { icon: '🌿', name: 'Brote Fuerte', desc: 'Creciendo con consistencia y práctica diaria.' },
@@ -136,7 +137,39 @@ export default function Home() {
     setTimeout(() => setSavedNotice(null), 3800);
   };
 
-  // Funciones de control
+  const handleResetProgress = () => {
+    playPopSound();
+    const confirmed = window.confirm('¿Quieres reiniciar tus estadísticas de prueba a 0 para comenzar de nuevo?');
+    if (confirmed) {
+      localStorage.removeItem('em_xp');
+      localStorage.removeItem('em_mins');
+      localStorage.removeItem('em_streak');
+      localStorage.removeItem('em_favs');
+      localStorage.removeItem('em_water');
+      localStorage.removeItem('em_plant');
+      localStorage.removeItem('em_qp');
+      localStorage.removeItem('em_qc');
+      localStorage.removeItem('em_ql');
+      localStorage.removeItem('em_claimed');
+      localStorage.removeItem('em_week');
+
+      setXp(0);
+      setTotalMinutes(0);
+      setStreak(1);
+      setFavoritesCount(0);
+      setWaterDrops(3);
+      setPlantStage(1);
+      setQuestPomo(false);
+      setQuestCards(false);
+      setQuestListening(false);
+      setQuestClaimed(false);
+      setWeeklyActive([true, false, false, false, false, false, false]);
+
+      playChimeSound();
+      showSaveNotice('✨ ¡Progreso reiniciado a cero con éxito!');
+    }
+  };
+
   const handleStartTimer = (mins: number) => {
     playPopSound();
     setPomoMinutes(mins);
@@ -201,7 +234,7 @@ export default function Home() {
     }
   };
 
-  // Cargar datos guardados
+  // Cargar datos
   useEffect(() => {
     const sXp = localStorage.getItem('em_xp');
     const sMins = localStorage.getItem('em_mins');
@@ -245,7 +278,6 @@ export default function Home() {
     localStorage.setItem('em_week', JSON.stringify(weeklyActive));
   }, [xp, totalMinutes, streak, favoritesCount, waterDrops, plantStage, questPomo, questCards, questListening, questClaimed, weeklyActive]);
 
-  // Manejo de sonido ambiental de lluvia
   const toggleFocusAudio = () => {
     playPopSound();
     if (isAudioPlaying) {
@@ -291,7 +323,6 @@ export default function Home() {
     }
   };
 
-  // Funcion de voz nativa
   const speakEnglish = (text: string) => {
     playPopSound();
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
@@ -316,7 +347,6 @@ export default function Home() {
     }
   };
 
-  // Timer Effect
   useEffect(() => {
     let timer: NodeJS.Timeout;
     if (isRunning && timeLeft > 0) {
@@ -390,75 +420,9 @@ export default function Home() {
 
   const activeCard = filteredFlashcards[cardIndex % filteredFlashcards.length] || rawFlashcards[0];
 
-  // Vocabulario estructurado de los PDFs
+  // Vocabulario
   const [vocabTab, setVocabTab] = useState('200_SUSTANTIVOS');
   const [vocabSearch, setVocabSearch] = useState('');
-
-  const vocab200List = [
-    { en: 'Head', es: 'Cabeza', cat: 'El Cuerpo', ipa: 'jed', note: 'Parte superior del cuerpo' },
-    { en: 'Eye', es: 'Ojo', cat: 'El Cuerpo', ipa: 'ai', note: 'Suena exactamente igual que I (yo)' },
-    { en: 'Ear', es: 'Oreja, oído', cat: 'El Cuerpo', ipa: 'ier', note: 'No confundir con year (año)' },
-    { en: 'Nose', es: 'Nariz', cat: 'El Cuerpo', ipa: 'nous', note: 'Sustantivo singular' },
-    { en: 'Mouth', es: 'Boca', cat: 'El Cuerpo', ipa: 'mauz', note: 'Sonido th suave entre los dientes' },
-    { en: 'Heart', es: 'Corazón', cat: 'El Cuerpo', ipa: 'jart', note: 'No confundir con hurt (doler)' },
-    { en: 'Hair', es: 'Cabello, pelo', cat: 'El Cuerpo', ipa: 'jear', note: 'Incontable: My hair is clean' },
-    { en: 'Hand', es: 'Mano', cat: 'El Cuerpo', ipa: 'jand', note: 'También verbo: hand in (entregar)' },
-    { en: 'Back', es: 'Espalda / Atrás', cat: 'El Cuerpo', ipa: 'bak', note: 'Doble función: espalda o regresar' },
-    { en: 'Mind', es: 'Mente', cat: 'El Cuerpo', ipa: 'maind', note: 'También: Do you mind? (¿Te molesta?)' },
-
-    { en: 'Child / Children', es: 'Niño/a -> Niños/as', cat: 'Familia', ipa: 'chaild -> chidren', note: 'Plural irregular sin -s' },
-    { en: 'Woman / Women', es: 'Mujer -> Mujeres', cat: 'Familia', ipa: 'uman -> uimin', note: 'Cambia la pronunciación de las dos vocales' },
-    { en: 'Man / Men', es: 'Hombre -> Hombres', cat: 'Familia', ipa: 'man -> men', note: 'Plural irregular' },
-    { en: 'Person / People', es: 'Persona -> Gente', cat: 'Familia', ipa: 'person -> pipol', note: 'People siempre lleva verbo en plural: People are...' },
-    { en: 'Wife / Wives', es: 'Esposa -> Esposas', cat: 'Familia', ipa: 'uaif -> uaivz', note: 'Terminaciones en -fe cambian a -ves' },
-    { en: 'Son', es: 'Hijo varón', cat: 'Familia', ipa: 'san', note: 'Suena exactamente igual que Sun (sol)' },
-
-    { en: 'Home', es: 'Hogar, donde vives', cat: 'Casa', ipa: 'joum', note: 'I go home (sin preposición to)' },
-    { en: 'House', es: 'Casa (el edificio físico)', cat: 'Casa', ipa: 'jaus', note: 'Refiere a la construcción' },
-    { en: 'Clothes', es: 'Ropa', cat: 'Casa', ipa: 'cloudz', note: 'Siempre plural: My clothes are in the closet' },
-    { en: 'Glass / Glasses', es: 'Vaso/Vidrio -> Anteojos', cat: 'Casa', ipa: 'glas -> glasiz', note: 'En plural significa lentes o gafas' },
-    { en: 'Key', es: 'Llave o clave', cat: 'Casa', ipa: 'ki', note: 'Tanto llave física como clave de acceso' },
-    { en: 'Window', es: 'Ventana', cat: 'Casa', ipa: 'uindou', note: 'Sustantivo común' },
-
-    { en: 'City', es: 'Ciudad', cat: 'Ciudad', ipa: 'siti', note: 'Plural: cities' },
-    { en: 'Street', es: 'Calle', cat: 'Ciudad', ipa: 'strit', note: 'Usa la preposición on: On Main Street' },
-    { en: 'School', es: 'Escuela / Colegio', cat: 'Ciudad', ipa: 'skul', note: 'Colegio escolar' },
-    { en: 'Building', es: 'Edificio', cat: 'Ciudad', ipa: 'bilding', note: 'Proviene del verbo build' },
-
-    { en: 'Money', es: 'Dinero', cat: 'Trabajo', ipa: 'mani', note: 'Incontable: The money is safe' },
-    { en: 'Job', es: 'Empleo, trabajo puntual', cat: 'Trabajo', ipa: 'yob', note: 'Contable: A new job' },
-    { en: 'Bill', es: 'Cuenta, factura o billete', cat: 'Trabajo', ipa: 'bil', note: 'Can I have the bill, please?' },
-    { en: 'Business', es: 'Negocio, empresa', cat: 'Trabajo', ipa: 'biznes', note: 'Se pronuncia en 2 sílabas' }
-  ];
-
-  const vocab500List = [
-    { en: 'The', type: 'Funcional', es: 'El, la, los, las', note: 'La palabra #1 más frecuente de todo el idioma inglés' },
-    { en: 'Be (was/were, been)', type: 'Verbo', es: 'Ser o estar', note: 'Verbo irregular base' },
-    { en: 'Have (had)', type: 'Verbo', es: 'Tener; haber', note: 'Verbo auxiliar en tiempos compuestos' },
-    { en: 'Do (did, done)', type: 'Verbo', es: 'Hacer; auxiliar de preguntas', note: 'Auxiliar para presente y pasado' },
-    { en: 'Say (said)', type: 'Verbo', es: 'Decir', note: 'Said se pronuncia sed' },
-    { en: 'Get (got)', type: 'Verbo', es: 'Conseguir, llegar, ponerse', note: 'El verbo más versátil en inglés conversacional' },
-    { en: 'Make (made)', type: 'Verbo', es: 'Hacer, crear, fabricar', note: 'Make mistakes, make coffee, make plans' },
-    { en: 'Go (went, gone)', type: 'Verbo', es: 'Ir', note: 'Pasado irregular: went' },
-    { en: 'Know (knew, known)', type: 'Verbo', es: 'Saber, conocer', note: 'La K inicial es completamente muda' },
-    { en: 'Take (took, taken)', type: 'Verbo', es: 'Tomar, llevar', note: 'Take time, take photos, take a shower' },
-    { en: 'See (saw, seen)', type: 'Verbo', es: 'Ver', note: 'Suena igual que sea (mar)' },
-    { en: 'Come (came, come)', type: 'Verbo', es: 'Venir', note: 'Pasado: came' },
-    { en: 'Think (thought)', type: 'Verbo', es: 'Pensar, creer', note: 'Thought suena con o abierta y gh muda' },
-    { en: 'Find (found)', type: 'Verbo', es: 'Encontrar', note: 'Pasado: found' },
-    { en: 'Give (gave, given)', type: 'Verbo', es: 'Dar', note: 'Pasado: gave' }
-  ];
-
-  const falseFriendsList = [
-    { en: 'Actually', parece: 'Actualmente', es: 'En realidad / De hecho', ejemplo: 'Actually, I prefer morning workouts.' },
-    { en: 'Large', parece: 'Largo', es: 'Grande', ejemplo: 'We have a large room. (Largo se dice long).' },
-    { en: 'College', parece: 'Colegio', es: 'Universidad / Facultad', ejemplo: 'She studies psychology in college.' },
-    { en: 'Current', parece: 'Corriente', es: 'Actual', ejemplo: 'This is my current schedule.' },
-    { en: 'Policy', parece: 'Policía', es: 'Política / Norma institucional', ejemplo: 'It is the company policy.' },
-    { en: 'Date', parece: 'Dato', es: 'Fecha o Cita romántica', ejemplo: 'What is today date? (Dato se dice data).' },
-    { en: 'Miss', parece: 'Señorita', es: 'Extrañar o Perder (el transporte)', ejemplo: 'I miss you / I missed the bus.' },
-    { en: 'Pretty', parece: 'Lindo', es: 'Bastante (modificador)', ejemplo: 'It is pretty good!' }
-  ];
 
   const quizList = [
     {
@@ -633,7 +597,7 @@ export default function Home() {
           </nav>
         </div>
 
-        <div className="pt-3 border-t border-[#D3E3DD]">
+        <div className="pt-3 border-t border-[#D3E3DD] space-y-3">
           <div className="bg-gradient-to-br from-[#FFF0F3] via-[#FFD6DE] to-[#FFC2D1] border-2 border-[#FFB3C6] rounded-[24px] p-4 flex flex-col items-center text-center shadow-[6px_8px_18px_rgba(255,182,193,0.3)]">
             <div className="w-12 h-12 rounded-2xl bg-[#FFE4EB] flex items-center justify-center text-xl mb-1 shadow-inner">
               📓
@@ -648,6 +612,13 @@ export default function Home() {
               <span>📖</span> Abrir Goodnotes <span>↗</span>
             </a>
           </div>
+
+          <button
+            onClick={handleResetProgress}
+            className="w-full py-2 rounded-[16px] bg-[#F3ECE1] hover:bg-[#EADFD0] text-[#8C7E72] hover:text-[#5C524A] text-[10px] font-bold text-center flex items-center justify-center gap-1.5 transition-colors shadow-sm"
+          >
+            <span>↺</span> Reiniciar Progreso a Cero
+          </button>
         </div>
       </aside>
 
@@ -969,7 +940,7 @@ export default function Home() {
           </div>
         )}
 
-        {/* 2. VOCABULARIO ESENCIAL */}
+        {/* 2. VOCABULARIO ESENCIAL (200 SUSTANTIVOS COMPLETOS) */}
         {activeTab === 'vocabulario' && (
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -978,15 +949,15 @@ export default function Home() {
                   Vocabulario Esencial (PDFs de Apoyo) <span>📖</span>
                 </h1>
                 <p className="text-[#7A6E63] text-xs mt-1">
-                  Material estructurado de los 200 sustantivos y las 500 palabras de mayor frecuencia de Inglés Práctico.
+                  Material completo de los 200 sustantivos y palabras frecuentes de Inglés Práctico.
                 </p>
               </div>
 
               <div className="flex gap-1.5 overflow-x-auto pb-1">
                 {[
-                  { id: '200_SUSTANTIVOS', label: '200 Sustantivos' },
-                  { id: '500_PALABRAS', label: '500 Frecuentes' },
-                  { id: 'FALSOS_AMIGOS', label: 'Falsos Amigos' }
+                  { id: '200_SUSTANTIVOS', label: `200 Sustantivos (${vocab200List.length})` },
+                  { id: '500_PALABRAS', label: `Frecuentes (${vocab500List.length})` },
+                  { id: 'FALSOS_AMIGOS', label: `Falsos Amigos (${falseFriendsList.length})` }
                 ].map(tab => (
                   <button
                     key={tab.id}
@@ -1012,7 +983,7 @@ export default function Home() {
                 type="text"
                 value={vocabSearch}
                 onChange={e => setVocabSearch(e.target.value)}
-                placeholder="Buscar palabra o traducción (ej. eye, child, actually)..."
+                placeholder="Buscar palabra o traducción (ej. sister, brother, apple, doctor)..."
                 className="w-full bg-transparent border-none text-xs text-[#3D352E] placeholder-[#A3978C] focus:outline-none font-medium"
               />
               {vocabSearch && (
