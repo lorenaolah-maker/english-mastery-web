@@ -3,33 +3,37 @@
 import React, { useState, useEffect } from 'react';
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState('pomodoro');
+  const [activeTab, setActiveTab] = useState('cursos');
   
-  // Métricas desde cero para arrancar esta semana (persistentes en tu dispositivo)
+  // Métricas desde cero (persistentes en tu dispositivo)
   const [xp, setXp] = useState(0);
   const [streak, setStreak] = useState(1);
   const [totalMinutes, setTotalMinutes] = useState(0);
   const [favoritesCount, setFavoritesCount] = useState(0);
+  const [plantStage, setPlantStage] = useState(1); // 1: 🌱, 2: 🌿, 3: 🪴, 4: 🌸, 5: 🌳
 
-  // Cargar datos previos si existen en el navegador
+  // Cargar datos guardados
   useEffect(() => {
     const savedXp = localStorage.getItem('em_xp');
     const savedMins = localStorage.getItem('em_mins');
     const savedStreak = localStorage.getItem('em_streak');
     const savedFavs = localStorage.getItem('em_favs');
+    const savedPlant = localStorage.getItem('em_plant');
     if (savedXp !== null) setXp(Number(savedXp));
     if (savedMins !== null) setTotalMinutes(Number(savedMins));
     if (savedStreak !== null) setStreak(Number(savedStreak));
     if (savedFavs !== null) setFavoritesCount(Number(savedFavs));
+    if (savedPlant !== null) setPlantStage(Number(savedPlant));
   }, []);
 
-  // Guardar automáticamente al cambiar
+  // Guardar automáticamente
   useEffect(() => {
     localStorage.setItem('em_xp', xp.toString());
     localStorage.setItem('em_mins', totalMinutes.toString());
     localStorage.setItem('em_streak', streak.toString());
     localStorage.setItem('em_favs', favoritesCount.toString());
-  }, [xp, totalMinutes, streak, favoritesCount]);
+    localStorage.setItem('em_plant', plantStage.toString());
+  }, [xp, totalMinutes, streak, favoritesCount, plantStage]);
   
   // Pomodoro Timer State
   const [pomoMinutes, setPomoMinutes] = useState(15);
@@ -83,7 +87,9 @@ export default function Home() {
       const earnedXp = pomoMinutes * 10;
       setXp(prev => prev + earnedXp);
       setTotalMinutes(prev => prev + pomoMinutes);
-      showSaveNotice(`🎉 ¡Bloque de ${pomoMinutes} min completado! +${earnedXp} XP`);
+      // Hacer crecer la planta de enfoque
+      setPlantStage(prev => Math.min(prev + 1, 5));
+      showSaveNotice(`🎉 ¡Bloque de ${pomoMinutes}m completado! +${earnedXp} XP 🪴 ¡Tu planta ha crecido!`);
     }
     return () => clearInterval(timer);
   }, [isRunning, timeLeft, pomoMinutes]);
@@ -93,6 +99,15 @@ export default function Home() {
     setTimeLeft(mins * 60);
     setIsRunning(true);
   };
+
+  const plantIcons = ['🌱', '🌿', '🪴', '🌸', '🌳'];
+  const plantNames = [
+    'Semilla Brotando 🌱',
+    'Brote Saludable 🌿',
+    'Planta en Crecimiento 🪴',
+    'Flor en Pleno Florecimiento 🌸',
+    'Árbol Dorado de Sabiduría 🌳'
+  ];
 
   const handleAnalyzeSpeaking = () => {
     if (!speakingText.trim()) return;
@@ -131,66 +146,63 @@ export default function Home() {
       <style jsx global>{`
         .clay-card-big {
           background: #FFFFFF;
-          box-shadow: 10px 12px 24px rgba(195, 175, 155, 0.28),
-                      -8px -8px 20px rgba(255, 255, 255, 0.95);
-          border-radius: 34px;
+          box-shadow: 8px 10px 22px rgba(195, 175, 155, 0.25),
+                      -6px -6px 16px rgba(255, 255, 255, 0.95);
+          border-radius: 30px;
         }
         .clay-icon-big {
-          box-shadow: 6px 7px 16px rgba(185, 165, 145, 0.32),
-                      -5px -5px 12px rgba(255, 255, 255, 0.95),
+          box-shadow: 5px 6px 14px rgba(185, 165, 145, 0.3),
+                      -4px -4px 10px rgba(255, 255, 255, 0.95),
                       inset 2px 2px 3px rgba(255, 255, 255, 0.8);
-          border-radius: 26px;
+          border-radius: 24px;
           transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
         .clay-icon-big:hover {
-          transform: translateY(-3px) scale(1.02);
-          box-shadow: 8px 11px 22px rgba(185, 165, 145, 0.4),
-                      -6px -6px 16px rgba(255, 255, 255, 1);
+          transform: translateY(-2px) scale(1.02);
+          box-shadow: 7px 9px 18px rgba(185, 165, 145, 0.38),
+                      -5px -5px 14px rgba(255, 255, 255, 1);
         }
         .clay-icon-big:active {
           transform: translateY(2px) scale(0.98);
-          box-shadow: 2px 3px 6px rgba(185, 165, 145, 0.25),
-                      -2px -2px 6px rgba(255, 255, 255, 0.8),
-                      inset 3px 3px 6px rgba(0, 0, 0, 0.08);
+          box-shadow: 2px 2px 5px rgba(185, 165, 145, 0.25);
         }
         .clay-inset-pill {
           background: #EFE8DE;
-          box-shadow: inset 4px 4px 8px rgba(190, 170, 150, 0.35),
-                      inset -4px -4px 8px rgba(255, 255, 255, 0.85);
-          border-radius: 24px;
+          box-shadow: inset 3px 3px 6px rgba(190, 170, 150, 0.3),
+                      inset -3px -3px 6px rgba(255, 255, 255, 0.85);
+          border-radius: 20px;
         }
         .clay-pill-active {
           background: #FFFFFF !important;
-          box-shadow: 6px 7px 18px rgba(170, 190, 185, 0.42),
-                      -5px -5px 14px rgba(255, 255, 255, 1);
-          transform: translateX(4px);
+          box-shadow: 5px 6px 16px rgba(170, 190, 185, 0.4),
+                      -4px -4px 12px rgba(255, 255, 255, 1);
+          transform: translateX(3px);
         }
         .clay-btn-orange {
           background: linear-gradient(135deg, #FF9B85 0%, #FF856D 100%);
-          box-shadow: 6px 7px 16px rgba(255, 133, 109, 0.42),
-                      -4px -4px 10px rgba(255, 255, 255, 0.9),
+          box-shadow: 5px 6px 14px rgba(255, 133, 109, 0.4),
+                      -3px -3px 8px rgba(255, 255, 255, 0.9),
                       inset 2px 2px 3px rgba(255, 255, 255, 0.5);
-          border-radius: 22px;
+          border-radius: 20px;
           color: white;
           transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
         .clay-btn-orange:hover {
           transform: translateY(-2px);
-          box-shadow: 8px 10px 20px rgba(255, 133, 109, 0.5);
+          filter: brightness(1.03);
         }
         .clay-btn-orange:active {
           transform: translateY(2px);
-          box-shadow: 2px 2px 6px rgba(255, 133, 109, 0.3);
         }
       `}</style>
 
       {/* BARRA LATERAL SALVIA / MENTA SUAVE */}
-      <aside className="w-84 bg-[#DCECE7] p-6 flex flex-col justify-between border-r border-[#CFE1DC] shadow-[6px_0_24px_rgba(180,200,195,0.22)]">
+      <aside className="w-76 shrink-0 bg-[#DCECE7] p-5 flex flex-col justify-between border-r border-[#CFE1DC] shadow-[6px_0_24px_rgba(180,200,195,0.2)]">
         <div>
           {/* PERFIL AVATAR KAWAII */}
-          <div className="clay-card-big p-4 mb-6 flex items-center gap-3.5 bg-[#FFFFFF]/90">
-            <div className="relative w-16 h-16 rounded-[28px] p-1 bg-[#DCECE7] clay-icon-big flex items-center justify-center shrink-0">
-              <div className="w-full h-full rounded-[22px] overflow-hidden bg-[#FFD8CC] flex items-center justify-center font-bold text-[#A84A32]">
+          <div className="clay-card-big p-3.5 mb-5 flex items-center gap-3 bg-[#FFFFFF]/90">
+            <div className="relative w-14 h-14 rounded-[24px] p-1 bg-[#DCECE7] clay-icon-big flex items-center justify-center shrink-0">
+              <div className="w-full h-full rounded-[18px] overflow-hidden bg-[#FFD8CC] flex items-center justify-center font-bold text-[#A84A32]">
                 <img
                   src="/lorena.jpg"
                   alt="Lorena Alvarez"
@@ -199,15 +211,15 @@ export default function Home() {
                     (e.target as HTMLElement).style.display = 'none';
                   }}
                 />
-                <span className="text-base font-black">LA</span>
+                <span className="text-sm font-black">LA</span>
               </div>
-              <span className="absolute -bottom-1 -right-1 text-sm">🌸</span>
+              <span className="absolute -bottom-1 -right-1 text-xs">🌸</span>
             </div>
-            <div>
+            <div className="min-w-0">
               <div className="text-[11px] text-[#55756C] font-extrabold flex items-center gap-1">
                 Hi, Lorena! <span>👋</span>
               </div>
-              <div className="font-extrabold text-[#3D352E] text-base tracking-tight leading-snug">
+              <div className="font-extrabold text-[#3D352E] text-sm tracking-tight truncate">
                 English Mastery
               </div>
               <div className="text-[10px] text-[#4A7C59] font-black mt-0.5 flex items-center gap-1">
@@ -216,8 +228,8 @@ export default function Home() {
             </div>
           </div>
 
-          {/* MENÚ DE NAVEGACIÓN CON ICONOS GRANDES 3D */}
-          <nav className="space-y-2.5">
+          {/* MENÚ DE NAVEGACIÓN */}
+          <nav className="space-y-2">
             {[
               { id: 'pomodoro', label: 'Dashboard & Focus', icon: '⏱️', badge: '15-20m', bg: 'bg-[#FFD8CC]' },
               { id: 'speaking', label: 'Speaking & Feedback', icon: '🗣️', badge: 'IA Lab', bg: 'bg-[#D8F3DC]' },
@@ -234,19 +246,19 @@ export default function Home() {
                 <button
                   key={item.id}
                   onClick={() => setActiveTab(item.id)}
-                  className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-[24px] text-xs font-black transition-all ${
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-[22px] text-xs font-black transition-all ${
                     active
                       ? 'clay-pill-active text-[#3A322C]'
                       : 'text-[#48635B] hover:bg-[#FFFFFF]/50'
                   }`}
                 >
-                  <span className="flex items-center gap-3">
-                    <span className={`w-10 h-10 rounded-[18px] flex items-center justify-center text-lg clay-icon-big ${item.bg}`}>
+                  <span className="flex items-center gap-2.5 min-w-0">
+                    <span className={`w-9 h-9 rounded-[16px] flex items-center justify-center text-base clay-icon-big shrink-0 ${item.bg}`}>
                       {item.icon}
                     </span>
-                    <span className="text-[13px] tracking-tight">{item.label}</span>
+                    <span className="text-xs tracking-tight truncate">{item.label}</span>
                   </span>
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-black ${
+                  <span className={`text-[9px] px-2 py-0.5 rounded-full font-black shrink-0 ${
                     active ? 'bg-[#DCECE7] text-[#2D5A4C]' : 'bg-[#CFE3DD] text-[#55756C]'
                   }`}>
                     {item.badge}
@@ -257,14 +269,14 @@ export default function Home() {
           </nav>
         </div>
 
-        {/* CARD INFERIOR GOODNOTES (CON CUADERNITO DIGITAL KAWAII) */}
-        <div className="pt-4 border-t border-[#CFE1DC]">
-          <div className="clay-card-big p-5 bg-gradient-to-br from-[#FFE8DF] via-[#FFD8CC] to-[#FFCAD4] border-2 border-[#FFCCD5] flex flex-col items-center text-center relative overflow-hidden">
-            <div className="w-13 h-13 rounded-2xl bg-[#FFE4D6] clay-icon-big flex items-center justify-center text-2xl mb-1 shadow-inner">
+        {/* CARD INFERIOR GOODNOTES CON CUADERNITO DIGITAL */}
+        <div className="pt-3 border-t border-[#CFE1DC]">
+          <div className="clay-card-big p-4 bg-gradient-to-br from-[#FFE8DF] via-[#FFD8CC] to-[#FFCAD4] border-2 border-[#FFCCD5] flex flex-col items-center text-center relative overflow-hidden">
+            <div className="w-12 h-12 rounded-2xl bg-[#FFE4D6] clay-icon-big flex items-center justify-center text-xl mb-1 shadow-inner">
               📓
             </div>
-            <div className="text-sm font-black text-[#5C2B34] mt-1">Cuaderno Digital</div>
-            <p className="text-[11px] text-[#7A3F49] font-semibold mb-3">Tus apuntes y notas en Goodnotes</p>
+            <div className="text-xs font-black text-[#5C2B34] mt-0.5">Cuaderno Digital</div>
+            <p className="text-[10px] text-[#7A3F49] font-semibold mb-2.5">Apuntes en Goodnotes</p>
             <a
               href="goodnotes://"
               className="w-full py-2.5 rounded-[18px] clay-btn-orange text-xs font-black text-center flex items-center justify-center gap-1.5"
@@ -276,27 +288,27 @@ export default function Home() {
       </aside>
 
       {/* ÁREA DE CONTENIDO PRINCIPAL */}
-      <main className="flex-1 p-8 max-w-4xl mx-auto overflow-y-auto">
+      <main className="flex-1 p-6 md:p-8 max-w-4xl mx-auto overflow-y-auto">
         {/* TOAST FLOTANTE */}
         {savedNotice && (
-          <div className="fixed top-6 right-6 z-50 clay-card-big bg-[#D8F3DC] text-[#1B4332] font-black text-xs px-6 py-4 border-2 border-[#B7E4C7] shadow-xl animate-bounce flex items-center gap-2">
+          <div className="fixed top-5 right-5 z-50 clay-card-big bg-[#D8F3DC] text-[#1B4332] font-black text-xs px-5 py-3.5 border-2 border-[#B7E4C7] shadow-xl animate-bounce flex items-center gap-2">
             <span>🌸</span>
             <span>{savedNotice}</span>
           </div>
         )}
 
-        {/* CABECERA SUPERIOR CON BUSCADOR Y CAMPANITA */}
+        {/* CABECERA SUPERIOR */}
         <div className="flex items-center justify-between mb-6">
           <div className="text-xl font-black text-[#3D352E] tracking-tight">
             Dashboard
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="clay-inset-pill px-4 py-2 flex items-center gap-2 text-xs text-[#8C7E72] w-64">
+            <div className="clay-inset-pill px-4 py-2 flex items-center gap-2 text-xs text-[#8C7E72] w-56 sm:w-64">
               <span>🔍</span>
               <input
                 type="text"
-                placeholder="Search lessons, topics, flashcards..."
+                placeholder="Search lessons, flashcards..."
                 className="bg-transparent border-none text-xs text-[#3D352E] placeholder-[#A3978C] focus:outline-none w-full font-medium"
               />
             </div>
@@ -309,12 +321,12 @@ export default function Home() {
         </div>
 
         {/* ========================================================= */}
-        {/* 1. FOCUS & POMODORO (EN CERO PARA INICIAR ESTA SEMANA) */}
+        {/* 1. FOCUS & POMODORO CON PLANTA INTERACTIVA */}
         {/* ========================================================= */}
         {activeTab === 'pomodoro' && (
           <div className="space-y-6">
-            <div className="clay-card-big p-7 bg-gradient-to-r from-[#FFF2EB] via-[#FFF8F3] to-[#FFFFFF] flex items-center justify-between relative overflow-hidden border border-[#F3E2D8]">
-              <div className="space-y-2.5 z-10">
+            <div className="clay-card-big p-6 sm:p-7 bg-gradient-to-r from-[#FFF2EB] via-[#FFF8F3] to-[#FFFFFF] flex items-center justify-between relative overflow-hidden border border-[#F3E2D8]">
+              <div className="space-y-2 z-10">
                 <div className="flex items-center gap-2 text-xs font-black text-[#8C341E]">
                   <span>Good Morning, Lorena!</span>
                   <span>☀️</span>
@@ -328,38 +340,44 @@ export default function Home() {
                 <div className="pt-1.5 flex gap-3">
                   <button
                     onClick={() => handleStartTimer(15)}
-                    className="px-6 py-3 rounded-[22px] clay-btn-orange text-xs font-black flex items-center gap-2"
+                    className="px-6 py-2.5 rounded-[20px] clay-btn-orange text-xs font-black flex items-center gap-2"
                   >
                     <span>▶</span> Play Something (15 Min)
                   </button>
                 </div>
               </div>
 
-              <div className="flex items-center gap-4 pr-4">
-                <div className="w-24 h-24 rounded-[30px] bg-[#FFE8DF] clay-icon-big flex items-center justify-center text-5xl shadow-inner">
+              {/* DETALLE TIERNO EN RELIEVE CON PLANTA VIVA INTERACTIVA */}
+              <div className="flex items-center gap-3 pr-2">
+                <div className="w-20 h-20 rounded-[28px] bg-[#FFE8DF] clay-icon-big flex items-center justify-center text-4xl shadow-inner">
                   🎧
                 </div>
-                <div className="w-16 h-20 rounded-[24px] bg-[#E8F4EE] clay-icon-big flex items-center justify-center text-3xl">
-                  🪴
+                <div
+                  onClick={() => showSaveNotice(`🪴 ${plantNames[plantStage - 1]} • Nivel ${plantStage}/5 de vitalidad con tus sesiones.`)}
+                  className="w-18 h-20 rounded-[24px] bg-[#E8F4EE] clay-icon-big flex flex-col items-center justify-center cursor-pointer hover:scale-105 transition-transform"
+                  title="Toca tu planta de enfoque"
+                >
+                  <span className="text-3xl">{plantIcons[plantStage - 1]}</span>
+                  <span className="text-[9px] font-black text-[#2D6A4F] mt-0.5">Nivel {plantStage}</span>
                 </div>
               </div>
             </div>
 
             {/* 4 TARJETAS PASTEL REINICIADAS EN CERO */}
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
               {[
                 { label: 'Songs / XP', val: `${xp}`, sub: 'Iniciando semana', bg: 'bg-[#D8F3DC]', icon: '🎵', text: 'text-[#1B4332]' },
                 { label: 'Favorites', val: `${favoritesCount}`, sub: 'Tarjetas dominadas', bg: 'bg-[#FFD8CC]', icon: '💖', text: 'text-[#8C341E]' },
                 { label: 'Hours Listened', val: `${(totalMinutes / 60).toFixed(1)}h`, sub: `${totalMinutes} min registrados`, bg: 'bg-[#FFF0C2]', icon: '⏱️', text: 'text-[#7A5B00]' },
                 { label: 'Current Streak', val: `${streak}`, sub: 'Día 1 de racha', bg: 'bg-[#D9EDF8]', icon: '🔥', text: 'text-[#1E6091]' },
               ].map((m, idx) => (
-                <div key={idx} className="clay-card-big p-5 flex flex-col justify-between items-start h-46 text-left">
-                  <div className={`w-13 h-13 rounded-[22px] ${m.bg} clay-icon-big flex items-center justify-center text-2xl`}>
+                <div key={idx} className="clay-card-big p-4 flex flex-col justify-between items-start h-40 text-left">
+                  <div className={`w-11 h-11 rounded-[20px] ${m.bg} clay-icon-big flex items-center justify-center text-xl`}>
                     {m.icon}
                   </div>
                   <div>
                     <div className="text-[11px] font-black text-[#7A6E63] tracking-wide">{m.label}</div>
-                    <div className="text-2xl font-black text-[#3D352E] mt-0.5">{m.val}</div>
+                    <div className="text-xl sm:text-2xl font-black text-[#3D352E] mt-0.5">{m.val}</div>
                     <div className={`text-[10px] font-black ${m.text} mt-0.5`}>{m.sub}</div>
                   </div>
                 </div>
@@ -367,7 +385,7 @@ export default function Home() {
             </div>
 
             {/* BARRA DE RANGO EN NIVEL 1 */}
-            <div className="clay-card-big p-6 space-y-2.5">
+            <div className="clay-card-big p-5 sm:p-6 space-y-2.5">
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2">
                   <span className="text-xl">👑</span>
@@ -377,7 +395,7 @@ export default function Home() {
                   <span>⭐</span> {xp} XP
                 </span>
               </div>
-              <div className="clay-inset-pill h-4.5 p-1 flex items-center">
+              <div className="clay-inset-pill h-4 p-1 flex items-center">
                 <div
                   className="bg-gradient-to-r from-[#FF9A85] via-[#FFB8A3] to-[#FFD8CC] h-full rounded-full transition-all duration-500 shadow-sm"
                   style={{ width: `${Math.min((xp / 1000) * 100, 100)}%` }}
@@ -391,18 +409,18 @@ export default function Home() {
 
             {/* LOGROS PASTEL SALIDOS CON RELIEVE 3D */}
             <div>
-              <h2 className="text-xs font-black uppercase tracking-wider text-[#7A6E63] mb-3.5 flex items-center gap-1.5">
+              <h2 className="text-xs font-black uppercase tracking-wider text-[#7A6E63] mb-3 flex items-center gap-1.5">
                 <span>🏆</span> Logros de Consistencia
               </h2>
-              <div className="grid grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
                 {[
                   { icon: '☀️', title: 'Early Bird', bg: 'bg-[#FFF0C2]', label: 'Mañanera' },
                   { icon: '🌱', title: 'First Step', bg: 'bg-[#D8F3DC]', label: 'Primer paso' },
                   { icon: '🔥', title: 'Warming Up', bg: 'bg-[#FFD8CC]', label: 'En racha' },
                   { icon: '📖', title: 'Module Down', bg: 'bg-[#EEDEF8]', label: 'Módulo listo' },
                 ].map((b, idx) => (
-                  <div key={idx} className="clay-card-big p-5 flex flex-col items-center text-center">
-                    <div className={`w-16 h-16 ${b.bg} clay-icon-big rounded-[24px] flex items-center justify-center text-3xl mb-2.5`}>
+                  <div key={idx} className="clay-card-big p-4 flex flex-col items-center text-center">
+                    <div className={`w-14 h-14 ${b.bg} clay-icon-big rounded-[22px] flex items-center justify-center text-2xl mb-2`}>
                       {b.icon}
                     </div>
                     <span className="text-xs font-black text-[#3D352E]">{b.title}</span>
@@ -421,17 +439,17 @@ export default function Home() {
                   </span>
                   <div className="text-base font-black text-[#3D352E] mt-1">Bloque de Inmersión Focalizado</div>
                 </div>
-                <div className="text-3xl font-black font-mono text-[#FF856D] clay-inset-pill px-6 py-2">
+                <div className="text-3xl font-black font-mono text-[#FF856D] clay-inset-pill px-5 py-2">
                   {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-3.5">
+              <div className="grid grid-cols-3 gap-3">
                 {[15, 20, 25].map(mins => (
                   <button
                     key={mins}
                     onClick={() => handleStartTimer(mins)}
-                    className={`py-3 rounded-[20px] text-xs font-black transition-all ${
+                    className={`py-2.5 rounded-[18px] text-xs font-black transition-all ${
                       pomoMinutes === mins
                         ? 'clay-icon-big bg-[#FFD8CC] text-[#8C341E]'
                         : 'clay-icon-big bg-[#FFFFFF] text-[#695F56]'
@@ -442,10 +460,10 @@ export default function Home() {
                 ))}
               </div>
 
-              <div className="flex gap-3.5">
+              <div className="flex gap-3">
                 <button
                   onClick={() => setIsRunning(!isRunning)}
-                  className={`flex-1 py-3.5 rounded-[22px] text-xs font-black clay-icon-big text-white transition-all ${
+                  className={`flex-1 py-3.5 rounded-[20px] text-xs font-black clay-icon-big text-white transition-all ${
                     isRunning
                       ? 'bg-[#FF856D] hover:bg-[#F26A50]'
                       : 'bg-[#52B788] hover:bg-[#40916C]'
@@ -458,7 +476,7 @@ export default function Home() {
                     setIsRunning(false);
                     setTimeLeft(pomoMinutes * 60);
                   }}
-                  className="px-6 py-3.5 rounded-[22px] text-xs font-black clay-icon-big bg-[#FFFFFF] text-[#695F56]"
+                  className="px-5 py-3.5 rounded-[20px] text-xs font-black clay-icon-big bg-[#FFFFFF] text-[#695F56]"
                 >
                   ↺ Reiniciar
                 </button>
@@ -479,24 +497,24 @@ export default function Home() {
               <p className="text-[#7A6E63] text-xs mt-1">Corrección de respuestas escritas con IA y evaluación oficial de Cambridge.</p>
             </div>
 
-            <div className="clay-card-big p-6 bg-gradient-to-r from-[#FFF5F0] to-[#FFFFFF] flex items-center justify-between border border-[#FADCD1]">
+            <div className="clay-card-big p-6 bg-gradient-to-r from-[#FFF5F0] to-[#FFFFFF] flex flex-col sm:flex-row sm:items-center justify-between gap-4 border border-[#FADCD1]">
               <div>
                 <span className="text-[10px] uppercase font-black px-3 py-1 rounded-full bg-[#FFD8CC] text-[#8C341E] clay-icon-big inline-block">
                   Oficial Cambridge 🎓
                 </span>
                 <div className="text-base font-black text-[#3D352E] mt-1.5">Evaluación de Voz con Sandi el Robot</div>
-                <div className="text-xs text-[#6B5E55] mt-0.5">Habla con el evaluador acústico de Cambridge para medir tu nivel exacto (A1 a C2).</div>
+                <div className="text-xs text-[#6B5E55] mt-0.5">Habla con el evaluador acústico de Cambridge para calibrar tu pronunciación (A1 a C2).</div>
               </div>
               <a
                 href="https://speakandimprove.com"
                 target="_blank"
-                className="px-5 py-3 rounded-[20px] clay-btn-orange text-xs font-black"
+                className="px-5 py-2.5 rounded-[18px] clay-btn-orange text-xs font-black text-center whitespace-nowrap"
               >
                 Abrir Speak & Improve ↗
               </a>
             </div>
 
-            <div className="clay-card-big p-7 space-y-4">
+            <div className="clay-card-big p-6 sm:p-7 space-y-4">
               <label className="block text-xs font-black text-[#3D352E]">
                 Escribe aquí tu frase o respuesta en inglés para evaluar gramática y pronunciación:
               </label>
@@ -510,7 +528,7 @@ export default function Home() {
               <button
                 onClick={handleAnalyzeSpeaking}
                 disabled={analyzing}
-                className="w-full py-4 rounded-[22px] bg-[#D8F3DC] hover:bg-[#B7E4C7] text-[#1B4332] font-black text-xs clay-icon-big disabled:opacity-50"
+                className="w-full py-3.5 rounded-[20px] bg-[#D8F3DC] hover:bg-[#B7E4C7] text-[#1B4332] font-black text-xs clay-icon-big disabled:opacity-50"
               >
                 {analyzing ? 'Analizando con IA...' : '✨ Analizar y Corregir con IA (+50 XP)'}
               </button>
@@ -525,11 +543,11 @@ export default function Home() {
         )}
 
         {/* ========================================================= */}
-        {/* 3. BIBLIOTECA DE CURSOS */}
+        {/* 3. BIBLIOTECA DE CURSOS (BOTONES REAJUSTADOS Y CONTENIDOS AL 100%) */}
         {/* ========================================================= */}
         {activeTab === 'cursos' && (
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <h1 className="text-2xl font-black text-[#3D352E] tracking-tight flex items-center gap-2">
                   Biblioteca de Cursos <span>📚</span>
@@ -539,46 +557,47 @@ export default function Home() {
               <a
                 href="https://consumer.hotmart.com"
                 target="_blank"
-                className="px-5 py-3 rounded-[22px] clay-btn-orange text-xs font-black flex items-center gap-2"
+                className="px-5 py-2.5 rounded-[20px] clay-btn-orange text-xs font-black flex items-center justify-center gap-2 whitespace-nowrap self-start sm:self-auto"
               >
                 <span>👑</span> Abrir Mi Cuenta Hotmart ↗
               </a>
             </div>
 
             {/* CURSO 1: INGLÉS PRÁCTICO */}
-            <div className="clay-card-big p-7 space-y-4 border-2 border-[#FED7AA]">
-              <div className="flex justify-between items-start">
-                <div className="space-y-1.5">
+            <div className="clay-card-big p-5 sm:p-6 space-y-4 border-2 border-[#FED7AA] overflow-hidden">
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                <div className="space-y-1">
                   <span className="text-[10px] uppercase font-black px-3 py-1 rounded-full bg-[#FFEDD5] text-[#9A3412] clay-icon-big inline-block">
                     Curso 1 • Portal Oficial Propio 📱
                   </span>
                   <h2 className="text-base font-black text-[#3D352E]">Inglés Práctico (App & Biblioteca)</h2>
                   <p className="text-xs text-[#6B5E55]">Acceso directo a tus clases, material en PDF de cada lección y asistente con IA.</p>
                 </div>
-                <div className="flex gap-2.5">
+                <div className="flex gap-2 shrink-0">
                   <a
                     href="https://app.inglespractico.info"
                     target="_blank"
-                    className="px-5 py-2.5 rounded-[20px] bg-[#FF9B85] hover:bg-[#FF856D] text-white font-black text-xs clay-icon-big"
+                    className="px-4 py-2 rounded-[18px] bg-[#FF9B85] hover:bg-[#FF856D] text-white font-black text-xs clay-icon-big whitespace-nowrap"
                   >
                     🚀 Abrir App
                   </a>
                   <a
                     href="https://app.inglespractico.info"
                     target="_blank"
-                    className="px-5 py-2.5 rounded-[20px] bg-[#FFF0C2] text-[#7A5B00] font-black text-xs clay-icon-big"
+                    className="px-4 py-2 rounded-[18px] bg-[#FFF0C2] text-[#7A5B00] font-black text-xs clay-icon-big whitespace-nowrap"
                   >
                     📖 PDFs
                   </a>
                 </div>
               </div>
 
-              <div className="pt-3 border-t border-[#F3E7DC] flex items-center gap-3.5">
+              {/* FILA DE GUARDADO AJUSTADA RESPONSIVA */}
+              <div className="pt-3 border-t border-[#F3E7DC] flex flex-wrap sm:flex-nowrap items-center gap-2.5">
                 <span className="text-xs font-bold text-[#6D635B] whitespace-nowrap">Semana completada:</span>
                 <select
                   value={ipWeek}
                   onChange={e => setIpWeek(Number(e.target.value))}
-                  className="flex-1 clay-inset-pill p-3 text-xs font-black text-[#3D352E] focus:outline-none"
+                  className="flex-1 min-w-[180px] clay-inset-pill p-2.5 text-xs font-black text-[#3D352E] focus:outline-none"
                 >
                   {Array.from({ length: 12 }, (_, i) => (
                     <option key={i + 1} value={i + 1}>Semana {i + 1} de 12 (Activación Neural)</option>
@@ -586,7 +605,7 @@ export default function Home() {
                 </select>
                 <button
                   onClick={() => showSaveNotice(`✅ Inglés Práctico guardado en Semana ${ipWeek}`)}
-                  className="px-6 py-2.5 rounded-[20px] bg-[#52B788] hover:bg-[#40916C] text-white font-black text-xs clay-icon-big whitespace-nowrap"
+                  className="px-5 py-2.5 rounded-[18px] bg-[#52B788] hover:bg-[#40916C] text-white font-black text-xs clay-icon-big whitespace-nowrap ml-auto sm:ml-0"
                 >
                   💾 Guardar Avance
                 </button>
@@ -594,34 +613,35 @@ export default function Home() {
             </div>
 
             {/* CURSO 2: GRINGO ACADEMY */}
-            <div className="clay-card-big p-7 space-y-4 border-2 border-[#BAE6FD]">
-              <div className="flex justify-between items-start">
-                <div className="space-y-1.5">
+            <div className="clay-card-big p-5 sm:p-6 space-y-4 border-2 border-[#BAE6FD] overflow-hidden">
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                <div className="space-y-1">
                   <span className="text-[10px] uppercase font-black px-3 py-1 rounded-full bg-[#E0F2FE] text-[#0369A1] clay-icon-big inline-block">
                     Curso 2 • Método Inmersivo 🎬
                   </span>
                   <h2 className="text-base font-black text-[#3D352E]">Gringo Academy (Hotmart Club)</h2>
                   <p className="text-xs text-[#6B5E55]">Telenovelas, episodios y entrenamiento auditivo continuo.</p>
                 </div>
-                <div className="flex gap-2.5">
+                <div className="flex gap-2 shrink-0">
                   <a
                     href="https://consumer.hotmart.com"
                     target="_blank"
-                    className="px-5 py-2.5 rounded-[20px] bg-[#38BDF8] hover:bg-[#0284C7] text-white font-black text-xs clay-icon-big whitespace-nowrap"
+                    className="px-4 py-2 rounded-[18px] bg-[#38BDF8] hover:bg-[#0284C7] text-white font-black text-xs clay-icon-big whitespace-nowrap"
                   >
                     🎬 Ver en Hotmart ↗
                   </a>
                   <a
                     href="https://consumer.hotmart.com"
                     target="_blank"
-                    className="px-5 py-2.5 rounded-[20px] bg-[#E0F2FE] text-[#0369A1] font-black text-xs clay-icon-big"
+                    className="px-4 py-2 rounded-[18px] bg-[#E0F2FE] text-[#0369A1] font-black text-xs clay-icon-big whitespace-nowrap"
                   >
                     📑 Guías
                   </a>
                 </div>
               </div>
 
-              <div className="pt-3 border-t border-[#F3E7DC] flex items-center gap-3.5">
+              {/* FILA DE GUARDADO AJUSTADA RESPONSIVA */}
+              <div className="pt-3 border-t border-[#F3E7DC] flex flex-wrap sm:flex-nowrap items-center gap-2.5">
                 <span className="text-xs font-bold text-[#6D635B] whitespace-nowrap">Telenovela / Bloque:</span>
                 <input
                   type="number"
@@ -629,13 +649,13 @@ export default function Home() {
                   max="130"
                   value={gringoUnit}
                   onChange={e => setGringoUnit(Number(e.target.value))}
-                  className="w-32 clay-inset-pill p-3 text-xs font-black text-[#3D352E] focus:outline-none"
+                  className="w-24 clay-inset-pill p-2.5 text-xs font-black text-[#3D352E] focus:outline-none"
                 />
                 <span className="text-xs text-[#8C7E72] font-semibold">de 130</span>
-                <div className="flex-1"></div>
+                <div className="flex-1 hidden sm:block"></div>
                 <button
                   onClick={() => showSaveNotice(`✅ Gringo Academy guardado en Telenovela ${gringoUnit}`)}
-                  className="px-6 py-2.5 rounded-[20px] bg-[#38BDF8] hover:bg-[#0284C7] text-white font-black text-xs clay-icon-big whitespace-nowrap"
+                  className="px-5 py-2.5 rounded-[18px] bg-[#38BDF8] hover:bg-[#0284C7] text-white font-black text-xs clay-icon-big whitespace-nowrap ml-auto sm:ml-0"
                 >
                   💾 Guardar Telenovela
                 </button>
@@ -643,39 +663,40 @@ export default function Home() {
             </div>
 
             {/* CURSO 3: ACTIVACIÓN NEURAL */}
-            <div className="clay-card-big p-7 space-y-4 border-2 border-[#DDD6FE]">
-              <div className="flex justify-between items-start">
-                <div className="space-y-1.5">
+            <div className="clay-card-big p-5 sm:p-6 space-y-4 border-2 border-[#DDD6FE] overflow-hidden">
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                <div className="space-y-1">
                   <span className="text-[10px] uppercase font-black px-3 py-1 rounded-full bg-[#EDE9FE] text-[#5B21B6] clay-icon-big inline-block">
                     Curso 3 • Reprogramación Subconsciente 🧠
                   </span>
                   <h2 className="text-base font-black text-[#3D352E]">Activación Neural: Audios & Subconsciente</h2>
                   <p className="text-xs text-[#6B5E55]">Sesiones de audio guiadas y acondicionamiento auditivo profundo en Hotmart.</p>
                 </div>
-                <div className="flex gap-2.5">
+                <div className="flex gap-2 shrink-0">
                   <a
                     href="https://consumer.hotmart.com"
                     target="_blank"
-                    className="px-5 py-2.5 rounded-[20px] bg-[#A855F7] hover:bg-[#9333EA] text-white font-black text-xs clay-icon-big whitespace-nowrap"
+                    className="px-4 py-2 rounded-[18px] bg-[#A855F7] hover:bg-[#9333EA] text-white font-black text-xs clay-icon-big whitespace-nowrap"
                   >
                     🎧 Abrir en Hotmart ↗
                   </a>
                   <a
                     href="https://consumer.hotmart.com"
                     target="_blank"
-                    className="px-5 py-2.5 rounded-[20px] bg-[#EDE9FE] text-[#5B21B6] font-black text-xs clay-icon-big"
+                    className="px-4 py-2 rounded-[18px] bg-[#EDE9FE] text-[#5B21B6] font-black text-xs clay-icon-big whitespace-nowrap"
                   >
                     🎵 Audios
                   </a>
                 </div>
               </div>
 
-              <div className="pt-3 border-t border-[#F3E7DC] flex items-center gap-3.5">
+              {/* FILA DE GUARDADO AJUSTADA RESPONSIVA */}
+              <div className="pt-3 border-t border-[#F3E7DC] flex flex-wrap sm:flex-nowrap items-center gap-2.5">
                 <span className="text-xs font-bold text-[#6D635B] whitespace-nowrap">Módulo activo:</span>
                 <select
                   value={neuralWeek}
                   onChange={e => setNeuralWeek(Number(e.target.value))}
-                  className="flex-1 clay-inset-pill p-3 text-xs font-black text-[#3D352E] focus:outline-none"
+                  className="flex-1 min-w-[180px] clay-inset-pill p-2.5 text-xs font-black text-[#3D352E] focus:outline-none"
                 >
                   {Array.from({ length: 12 }, (_, i) => (
                     <option key={i + 1} value={i + 1}>Fase {i + 1}: Reprogramación & Escucha Diaria</option>
@@ -683,7 +704,7 @@ export default function Home() {
                 </select>
                 <button
                   onClick={() => showSaveNotice(`✅ Activación Neural guardada en Fase ${neuralWeek}`)}
-                  className="px-6 py-2.5 rounded-[20px] bg-[#A855F7] hover:bg-[#9333EA] text-white font-black text-xs clay-icon-big whitespace-nowrap"
+                  className="px-5 py-2.5 rounded-[18px] bg-[#A855F7] hover:bg-[#9333EA] text-white font-black text-xs clay-icon-big whitespace-nowrap ml-auto sm:ml-0"
                 >
                   💾 Guardar Fase
                 </button>
@@ -703,7 +724,7 @@ export default function Home() {
               </h1>
               <p className="text-[#7A6E63] text-xs mt-1">Herramientas seleccionadas con botones en relieve y color cálido.</p>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {[
                 { title: 'Speak & Improve (Cambridge)', desc: 'Evaluador acústico oficial de Cambridge con IA para medir tu nivel exacto.', link: 'https://speakandimprove.com', btn: 'Abrir Cambridge', icon: '🤖', bg: 'bg-[#FFD8CC]', btnBg: 'bg-[#FF9B85] hover:bg-[#FF856D] text-white' },
                 { title: 'Duolingo Web', desc: 'Práctica ágil de vocabulario y racha diaria de gramática interactiva.', link: 'https://www.duolingo.com', btn: 'Abrir Duolingo', icon: '🦉', bg: 'bg-[#D8F3DC]', btnBg: 'bg-[#52B788] hover:bg-[#40916C] text-white' },
@@ -712,17 +733,17 @@ export default function Home() {
                 { title: 'LingoClip (LyricsTraining)', desc: 'Entrena tu comprensión auditiva rellenando la letra de tus canciones favoritas.', link: 'https://lingoclip.com', btn: 'Abrir LingoClip', icon: '🎵', bg: 'bg-[#D9EDF8]', btnBg: 'bg-[#818CF8] hover:bg-[#6366F1] text-white' },
                 { title: 'Cambridge Dictionary', desc: 'Diccionario con audio británico y americano oficial y transcripción IPA.', link: 'https://dictionary.cambridge.org', btn: 'Abrir Diccionario', icon: '📖', bg: 'bg-[#FFE5EC]', btnBg: 'bg-[#F472B6] hover:bg-[#EC4899] text-white' },
               ].map((p, idx) => (
-                <div key={idx} className="clay-card-big p-6 flex flex-col justify-between">
+                <div key={idx} className="clay-card-big p-5 flex flex-col justify-between">
                   <div>
                     <div className="flex items-center gap-3 mb-2.5">
-                      <span className={`w-12 h-12 rounded-[20px] ${p.bg} clay-icon-big flex items-center justify-center text-2xl`}>
+                      <span className={`w-11 h-11 rounded-[18px] ${p.bg} clay-icon-big flex items-center justify-center text-xl`}>
                         {p.icon}
                       </span>
                       <h3 className="font-black text-[#3D352E] text-sm">{p.title}</h3>
                     </div>
                     <p className="text-xs text-[#6B5E55] leading-relaxed font-medium">{p.desc}</p>
                   </div>
-                  <a href={p.link} target="_blank" className={`mt-4 text-center py-3 rounded-[20px] font-black text-xs clay-icon-big ${p.btnBg} block`}>
+                  <a href={p.link} target="_blank" className={`mt-4 text-center py-2.5 rounded-[18px] font-black text-xs clay-icon-big ${p.btnBg} block`}>
                     {p.btn} ↗
                   </a>
                 </div>
@@ -743,8 +764,8 @@ export default function Home() {
               <p className="text-[#7A6E63] text-xs mt-1">Estrategias y clips para acostumbrar el oído al inglés a velocidad nativa.</p>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="clay-card-big p-6 space-y-3.5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="clay-card-big p-6 space-y-3">
                 <span className="text-[10px] font-black uppercase px-3 py-1 rounded-full bg-[#FFD8CC] text-[#8C341E] clay-icon-big inline-block">
                   Método 1 • Connected Speech
                 </span>
@@ -761,7 +782,7 @@ export default function Home() {
                 </a>
               </div>
 
-              <div className="clay-card-big p-6 space-y-3.5">
+              <div className="clay-card-big p-6 space-y-3">
                 <span className="text-[10px] font-black uppercase px-3 py-1 rounded-full bg-[#D9EDF8] text-[#1E6091] clay-icon-big inline-block">
                   Método 2 • Micro-Inmersión
                 </span>
@@ -779,9 +800,9 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="clay-card-big p-6 flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-[24px] bg-[#D8F3DC] clay-icon-big flex items-center justify-center text-2xl">
+            <div className="clay-card-big p-5 sm:p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-3.5">
+                <div className="w-13 h-13 rounded-[22px] bg-[#D8F3DC] clay-icon-big flex items-center justify-center text-2xl shrink-0">
                   🎧
                 </div>
                 <div>
@@ -793,9 +814,10 @@ export default function Home() {
                 onClick={() => {
                   setXp(prev => prev + 30);
                   setTotalMinutes(prev => prev + 20);
-                  showSaveNotice('🎉 ¡20 min de Listening registrados! +30 XP');
+                  setPlantStage(prev => Math.min(prev + 1, 5));
+                  showSaveNotice('🎉 ¡20 min de Listening registrados! +30 XP 🪴 ¡Tu planta florece!');
                 }}
-                className="px-6 py-3 rounded-[20px] bg-[#52B788] hover:bg-[#40916C] text-white font-black text-xs clay-icon-big"
+                className="w-full sm:w-auto px-5 py-2.5 rounded-[18px] bg-[#52B788] hover:bg-[#40916C] text-white font-black text-xs clay-icon-big whitespace-nowrap"
               >
                 ✅ Marcar como Completado (+30 XP)
               </button>
@@ -815,7 +837,7 @@ export default function Home() {
               <p className="text-[#7A6E63] text-xs mt-1">Escribe borradores, diarios o correos y recíbelos pulidos con nivel nativo.</p>
             </div>
 
-            <div className="clay-card-big p-7 space-y-4">
+            <div className="clay-card-big p-6 sm:p-7 space-y-4">
               <div className="flex justify-between items-center">
                 <span className="text-[10px] font-black uppercase px-3 py-1 rounded-full bg-[#EEDEF8] text-[#6A3D8A] clay-icon-big inline-block">
                   Sincronizado con Notion 📓
@@ -828,7 +850,7 @@ export default function Home() {
                 <select
                   value={writingType}
                   onChange={e => setWritingType(e.target.value)}
-                  className="w-full clay-inset-pill p-3.5 text-xs font-black text-[#3D352E] focus:outline-none"
+                  className="w-full clay-inset-pill p-3 text-xs font-black text-[#3D352E] focus:outline-none"
                 >
                   <option>Diario personal / Reflexión del día</option>
                   <option>Correo electrónico profesional o de negocios</option>
@@ -851,7 +873,7 @@ export default function Home() {
               <button
                 onClick={handleAnalyzeWriting}
                 disabled={isWritingAnalyzing}
-                className="w-full py-4 rounded-[22px] bg-[#EEDEF8] hover:bg-[#E3CCF2] text-[#6A3D8A] font-black text-xs clay-icon-big disabled:opacity-50"
+                className="w-full py-3.5 rounded-[20px] bg-[#EEDEF8] hover:bg-[#E3CCF2] text-[#6A3D8A] font-black text-xs clay-icon-big disabled:opacity-50"
               >
                 {isWritingAnalyzing ? 'Analizando redacción...' : '✨ Analizar y Guardar en Notion (+60 XP)'}
               </button>
@@ -877,7 +899,7 @@ export default function Home() {
               <p className="text-[#7A6E63] text-xs mt-1">El mapa de gramática, objetivos y competencias del Marco Común Europeo.</p>
             </div>
 
-            <div className="flex gap-3 overflow-x-auto pb-1.5">
+            <div className="flex gap-2.5 overflow-x-auto pb-1.5">
               {[
                 { id: 'A0', label: 'A0: Starter', color: 'bg-[#FFD8CC] text-[#8C341E]' },
                 { id: 'A1', label: 'A1: Elemental', color: 'bg-[#D9EDF8] text-[#1E6091]' },
@@ -890,7 +912,7 @@ export default function Home() {
                 <button
                   key={lvl.id}
                   onClick={() => setSelectedMilestone(lvl.id)}
-                  className={`px-5 py-3 rounded-[22px] text-xs font-black transition-all shrink-0 ${
+                  className={`px-4 py-2.5 rounded-[18px] text-xs font-black transition-all shrink-0 ${
                     selectedMilestone === lvl.id
                       ? `${lvl.color} clay-icon-big scale-105`
                       : 'bg-[#FFFFFF] text-[#695F56] clay-icon-big'
@@ -901,7 +923,7 @@ export default function Home() {
               ))}
             </div>
 
-            <div className="clay-card-big p-7 space-y-4">
+            <div className="clay-card-big p-6 sm:p-7 space-y-4">
               {selectedMilestone === 'A0' && (
                 <>
                   <span className="text-[10px] font-black uppercase px-3 py-1 rounded-full bg-[#FFD8CC] text-[#8C341E] clay-icon-big inline-block">Nivel A0 • Primeros Pasos</span>
@@ -999,12 +1021,12 @@ export default function Home() {
 
             <div
               onClick={() => setShowAnswer(!showAnswer)}
-              className="clay-card-big p-14 text-center cursor-pointer hover:scale-[1.01] transition-all min-h-[250px] flex flex-col items-center justify-center space-y-3.5"
+              className="clay-card-big p-10 sm:p-14 text-center cursor-pointer hover:scale-[1.01] transition-all min-h-[240px] flex flex-col items-center justify-center space-y-3.5"
             >
               <span className="text-[10px] font-black uppercase px-3.5 py-1 rounded-full bg-[#FFD8CC] text-[#8C341E] clay-icon-big inline-block">
                 {flashcards[cardIndex].lvl} • {flashcards[cardIndex].cat}
               </span>
-              <div className="text-2xl font-black text-[#3D352E]">
+              <div className="text-xl sm:text-2xl font-black text-[#3D352E]">
                 {showAnswer ? flashcards[cardIndex].back : flashcards[cardIndex].front}
               </div>
               <span className="text-[11px] text-[#A89C90] font-bold">
@@ -1012,13 +1034,13 @@ export default function Home() {
               </span>
             </div>
 
-            <div className="flex gap-3.5">
+            <div className="flex gap-3">
               <button
                 onClick={() => {
                   setShowAnswer(false);
                   setCardIndex(prev => (prev + 1) % flashcards.length);
                 }}
-                className="flex-1 py-4 rounded-[22px] bg-[#FFFFFF] text-[#5C524A] font-black text-xs clay-icon-big"
+                className="flex-1 py-3.5 rounded-[20px] bg-[#FFFFFF] text-[#5C524A] font-black text-xs clay-icon-big"
               >
                 ➡️ Siguiente Tarjeta
               </button>
@@ -1030,7 +1052,7 @@ export default function Home() {
                   setCardIndex(prev => (prev + 1) % flashcards.length);
                   showSaveNotice('🎉 ¡Tarjeta dominada! +20 XP');
                 }}
-                className="flex-1 py-4 rounded-[22px] bg-[#52B788] text-white font-black text-xs clay-icon-big"
+                className="flex-1 py-3.5 rounded-[20px] bg-[#52B788] text-white font-black text-xs clay-icon-big"
               >
                 ✅ ¡La domino! (+20 XP)
               </button>
@@ -1050,7 +1072,7 @@ export default function Home() {
               <p className="text-[#7A6E63] text-xs mt-1">Preguntas de diagnóstico de nivel con opciones en relieve y toque de color pastel.</p>
             </div>
 
-            <div className="clay-card-big p-7 space-y-4">
+            <div className="clay-card-big p-6 sm:p-7 space-y-4">
               <span className="text-[10px] font-black uppercase px-3 py-1 rounded-full bg-[#D9EDF8] text-[#1E6091] clay-icon-big inline-block">
                 Nivel A0 • Pregunta de Diagnóstico
               </span>
@@ -1058,7 +1080,7 @@ export default function Home() {
                 ¿Cuál es la forma correcta en inglés para decir &quot;Tengo 30 años&quot;?
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-2.5">
                 {[
                   { text: 'I have 30 years', correct: false, colorBg: 'bg-[#FFF2EB] hover:bg-[#FFE8DF]', border: 'border-[#FADCD1]' },
                   { text: 'I am 30 years old', correct: true, colorBg: 'bg-[#EBF5EE] hover:bg-[#DDF0E3]', border: 'border-[#D0EADB]' },
@@ -1072,7 +1094,7 @@ export default function Home() {
                       setQuizScore(op.correct ? 100 : 0);
                       if (op.correct) setXp(prev => prev + 30);
                     }}
-                    className={`w-full text-left p-4 rounded-[22px] text-xs font-black transition-all border ${op.border} ${
+                    className={`w-full text-left p-3.5 rounded-[20px] text-xs font-black transition-all border ${op.border} ${
                       quizAnswer === op.text
                         ? op.correct
                           ? 'clay-icon-big bg-[#D8F3DC] text-[#1B4332] border-[#74C69D]'
@@ -1081,7 +1103,7 @@ export default function Home() {
                     }`}
                   >
                     <span className="flex items-center gap-2">
-                      <span className="w-6 h-6 rounded-full bg-white/80 flex items-center justify-center text-[10px] font-black text-[#7A6E63] shadow-sm">
+                      <span className="w-5 h-5 rounded-full bg-white/80 flex items-center justify-center text-[10px] font-black text-[#7A6E63] shadow-sm">
                         {String.fromCharCode(65 + idx)}
                       </span>
                       <span>{op.text}</span>
@@ -1091,7 +1113,7 @@ export default function Home() {
               </div>
 
               {quizScore !== null && (
-                <div className={`p-4 rounded-[22px] text-xs font-bold clay-inset-pill ${quizScore === 100 ? 'text-[#1B4332] bg-[#D8F3DC]' : 'text-[#8C341E] bg-[#FFD8CC]'}`}>
+                <div className={`p-4 rounded-[20px] text-xs font-bold clay-inset-pill ${quizScore === 100 ? 'text-[#1B4332] bg-[#D8F3DC]' : 'text-[#8C341E] bg-[#FFD8CC]'}`}>
                   {quizScore === 100
                     ? '🎉 ¡Correcto! En inglés la edad se ES con el verbo To Be, no se tiene (+30 XP).'
                     : '❌ Incorrecto. Recuerda: en inglés nunca se usa "have" para la edad, sino el verbo To Be ("I am ... years old").'}
