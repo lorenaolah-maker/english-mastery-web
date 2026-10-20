@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState('hub');
+  const [activeTab, setActiveTab] = useState('vocabulario');
   
   // Métricas persistentes
   const [xp, setXp] = useState(0);
@@ -24,11 +24,11 @@ export default function Home() {
   const [questListening, setQuestListening] = useState(false);
   const [questClaimed, setQuestClaimed] = useState(false);
 
-  // Focus Audio Ambiental (Generador de Lluvia y Sonido Blanco Web Audio)
+  // Focus Audio Ambiental
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const audioCtxRef = useRef<AudioContext | null>(null);
 
-  // Web Audio Context compartido para los efectos táctiles de los botones
+  // Web Audio Context compartido para efectos táctiles
   const sfxCtxRef = useRef<AudioContext | null>(null);
 
   const getSfxContext = () => {
@@ -42,7 +42,6 @@ export default function Home() {
     return sfxCtxRef.current;
   };
 
-  // Sonido suave de burbuja para botones generales
   const playPopSound = () => {
     try {
       const ctx = getSfxContext();
@@ -64,7 +63,6 @@ export default function Home() {
     } catch {}
   };
 
-  // Sonido brillante de campanita para aciertos y celebraciones
   const playChimeSound = () => {
     try {
       const ctx = getSfxContext();
@@ -186,7 +184,7 @@ export default function Home() {
     }
   };
 
-  // Función de voz nativa optimizada para Safari en iPadOS
+  // Función de voz nativa Web Speech
   const speakEnglish = (text: string) => {
     playPopSound();
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
@@ -238,18 +236,45 @@ export default function Home() {
   const [neuralWeek, setNeuralWeek] = useState(1);
   const [savedNotice, setSavedNotice] = useState<string | null>(null);
 
-  // Flashcards State con filtro por niveles
+  // Banco amplio de Flashcards con regla gramatical
   const [cardLevelFilter, setCardLevelFilter] = useState('TODOS');
   const [cardIndex, setCardIndex] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
+
   const rawFlashcards = [
-    { lvl: 'A0', cat: 'Edad & Verbo Be', front: 'I am 38 years old', back: 'Tengo 38 años (En inglés la edad se ES con "To Be", nunca con "have") 🌸' },
-    { lvl: 'A1', cat: 'Rutinas', front: 'I wake up at 7:00 AM every morning', back: 'Me despierto a las 7:00 AM todas las mañanas (Presente simple) ☀️' },
-    { lvl: 'A2', cat: 'Pasado Simple', front: 'I went to the salon yesterday afternoon', back: 'Fui al salón ayer por la tarde (went = pasado irregular de go) 💇‍♀️' },
-    { lvl: 'B1', cat: 'Experiencias', front: 'I have lived here for five years', back: 'He vivido aquí durante cinco años (Present Perfect con for) 🌿' },
-    { lvl: 'B2', cat: 'Fluidez', front: 'Despite the tight deadline, we delivered on time', back: 'A pesar del plazo ajustado, logramos entregar a tiempo 💼' },
-    { lvl: 'C1', cat: 'Inversión', front: 'Seldom have I seen such dedication to mastery', back: 'Rara vez he visto tal dedicación a la maestría ✨' },
-    { lvl: 'C2', cat: 'Modismos', front: 'To hit the nail on the head', back: 'Dar en el clavo / acertar con total exactitud 🎯' },
+    { lvl: 'A0', cat: 'Edad & Verbo Be', front: 'I am 38 years old', back: 'Tengo 38 años. Regla: En inglés la edad siempre se expresa con el verbo To Be (I am / She is), nunca con have.' },
+    { lvl: 'A0', cat: 'Verbo Be Negativo', front: 'They are not at home', back: 'Ellos no están en casa. Regla: La negación simple se forma colocando NOT directamente después de am / is / are.' },
+    { lvl: 'A0', cat: 'Artículos A vs AN', front: 'An hour / A university', back: 'Una hora / Una universidad. Regla: La regla de a/an depende del sonido, no de la letra escrita. Hour suena vocal ("our"); university suena semiconsonante (/ju:/).' },
+    { lvl: 'A0', cat: 'Plurales Irregulares', front: 'Child ➔ Children / Person ➔ People', back: 'Niño ➔ Niños / Persona ➔ Gente. Regla: Sustantivos irregulares que no llevan -s al pluralizarse.' },
+    { lvl: 'A0', cat: 'Pronombres Sujeto vs Objeto', front: 'She called him yesterday', back: 'Ella lo llamó a él ayer. Regla: Los pronombres sujeto hacen la acción (She) y los objeto la reciben (him/her/them).' },
+
+    { lvl: 'A1', cat: 'Tercera Persona Singular', front: 'She drinks coffee every morning', back: 'Ella toma café cada mañana. Regla: En Presente Simple afirmativo, a he/she/it se le añade -s o -es al verbo principal.' },
+    { lvl: 'A1', cat: 'Preguntas con Do/Does', front: 'Where do you work?', back: '¿Dónde trabajas? Regla: En preguntas de presente simple se requiere el auxiliar Do (I/you/we/they) o Does (he/she/it).' },
+    { lvl: 'A1', cat: 'Preposiciones de Tiempo', front: 'At 7:00 AM / On Monday / In July', back: 'A las 7:00 / El lunes / En julio. Regla: AT para horas exactas, ON para días específicos y fechas, IN para meses o años.' },
+    { lvl: 'A1', cat: 'Sustantivos Incontables', front: 'The money is on the table', back: 'El dinero está en la mesa. Regla: Money e information son incontables en inglés: van siempre en singular (is), nunca con -s ni con "are".' },
+    { lvl: 'A1', cat: 'Expresión de Existencia', front: 'There is a book / There are two cats', back: 'Hay un libro / Hay dos gatos. Regla: "There is" para singular, "There are" para plural.' },
+
+    { lvl: 'A2', cat: 'Pasado Simple Irregular', front: 'I bought a new dictionary yesterday', back: 'Compré un nuevo diccionario ayer. Regla: Bought es el pasado irregular de buy (ojo: brought viene de bring).' },
+    { lvl: 'A2', cat: 'Futuro: Going to vs Will', front: 'I am going to study tonight', back: 'Voy a estudiar esta noche. Regla: "Going to" se usa para planes o intenciones ya decididas; "will" para decisiones espontáneas.' },
+    { lvl: 'A2', cat: 'Comparativos con Than', front: 'My city is larger than yours', back: 'Mi ciudad es más grande que la tuya. Regla: Adjetivos cortos añaden -er y se acompañan con la partícula "than".' },
+    { lvl: 'A2', cat: 'Pasado Continuo Interrumpido', front: 'I was reading when the phone rang', back: 'Estaba leyendo cuando sonó el teléfono. Regla: Pasado continuo (was/were + -ing) para la acción larga interrumpida por pasado simple.' },
+    { lvl: 'A2', cat: 'Falsos Amigos: Actually', front: 'Actually, I never said that', back: 'En realidad, nunca dije eso. Regla: "Actually" significa en realidad / de hecho. Actualmente se dice "Currently".' },
+
+    { lvl: 'B1', cat: 'Present Perfect con For/Since', front: 'I have lived here for five years', back: 'He vivido aquí durante cinco años. Regla: "For" indica duración temporal; "since" marca el punto exacto de inicio.' },
+    { lvl: 'B1', cat: 'Primer Condicional', front: 'If it rains, we will stay at home', back: 'Si llueve, nos quedaremos en casa. Regla: If + Presente Simple en la condición, Will + verbo base en el resultado.' },
+    { lvl: 'B1', cat: 'Segundo Condicional', front: 'If I had more time, I would travel', back: 'Si tuviera más tiempo, viajaría. Regla: If + Pasado Simple en la hipótesis, Would + verbo base en la consecuencia.' },
+    { lvl: 'B1', cat: 'Phrasal Verb: Look Forward To', front: 'I look forward to meeting you', back: 'Espero con mucha ilusión conocerte. Regla: La preposición "to" aquí exige verbo con terminación -ing o sustantivo.' },
+    { lvl: 'B1', cat: 'Modales de Deducción', front: 'She must be at work right now', back: 'Ella debe de estar en el trabajo ahora mismo. Regla: "Must" expresa certeza o deducción lógica afirmativa de alta probabilidad.' },
+
+    { lvl: 'B2', cat: 'Tercer Condicional', front: 'If I had known, I would have helped you', back: 'Si lo hubiera sabido, te habría ayudado. Regla: If + Past Perfect, Would have + Participio Pasado.' },
+    { lvl: 'B2', cat: 'Voz Pasiva Formal', front: 'The new system was implemented yesterday', back: 'El nuevo sistema fue implementado ayer. Regla: Verbo To Be conjugado + Participio del verbo principal cuando importa la acción.' },
+    { lvl: 'B2', cat: 'Cláusulas de Contraste', front: 'Despite the rain, we enjoyed the trip', back: 'A pesar de la lluvia, disfrutamos el viaje. Regla: "Despite" e "In spite of" van seguidos de sustantivo o gerundio (-ing).' },
+    { lvl: 'B2', cat: 'Modales Pasados', front: 'You should have told me earlier', back: 'Deberías habérmelo dicho antes. Regla: Should have + participio expresa arrepentimiento o crítica sobre el pasado.' },
+
+    { lvl: 'C1', cat: 'Inversión Gramatical Enfática', front: 'Seldom have I seen such dedication', back: 'Rara vez he visto tal dedicación. Regla: Adverbios negativos iniciales (Seldom, Rarely, Hardly) fuerzan la estructura auxiliar + sujeto.' },
+    { lvl: 'C1', cat: 'Subjuntivo Formal', front: 'I recommend that she be present', back: 'Recomiendo que ella esté presente. Regla: En registros formales se usa la forma base del verbo (be, go) tras verbos de demanda o sugerencia.' },
+    { lvl: 'C2', cat: 'Modismos Nativos', front: 'To hit the nail on the head', back: 'Dar en el clavo con total exactitud. Uso: Expresión idiomática que denota precisión conceptual absoluta en una conversación.' },
+    { lvl: 'C2', cat: 'Participle Clauses', front: 'Having finished her project, she rested', back: 'Habiendo concluido su proyecto, descansó. Regla: Reduce cláusulas temporales o causales aportando fluidez nativa y elegancia.' }
   ];
 
   const filteredFlashcards = rawFlashcards.filter(c => {
@@ -262,7 +287,76 @@ export default function Home() {
 
   const activeCard = filteredFlashcards[cardIndex % filteredFlashcards.length] || rawFlashcards[0];
 
-  // Banco de preguntas de Quizzes
+  // Vocabulario estructurado de los PDFs
+  const [vocabTab, setVocabTab] = useState('200_SUSTANTIVOS');
+  const [vocabSearch, setVocabSearch] = useState('');
+
+  const vocab200List = [
+    { en: 'Head', es: 'Cabeza', cat: 'El Cuerpo', ipa: 'jed', note: 'Parte superior del cuerpo' },
+    { en: 'Eye', es: 'Ojo', cat: 'El Cuerpo', ipa: 'ái', note: 'Suena exactamente igual que "I" (yo)' },
+    { en: 'Ear', es: 'Oreja, oído', cat: 'El Cuerpo', ipa: 'íer', note: 'No confundir con year (año)' },
+    { en: 'Nose', es: 'Nariz', cat: 'El Cuerpo', ipa: 'nóus', note: 'Sustantivo singular' },
+    { en: 'Mouth', es: 'Boca', cat: 'El Cuerpo', ipa: 'máuz', note: 'Sonido "th" suave entre los dientes' },
+    { en: 'Heart', es: 'Corazón', cat: 'El Cuerpo', ipa: 'jart', note: 'No confundir con hurt (doler)' },
+    { en: 'Hair', es: 'Cabello, pelo', cat: 'El Cuerpo', ipa: 'jéar', note: 'Incontable: "My hair is clean"' },
+    { en: 'Hand', es: 'Mano', cat: 'El Cuerpo', ipa: 'jand', note: 'También verbo: "hand in" (entregar)' },
+    { en: 'Back', es: 'Espalda / Atrás', cat: 'El Cuerpo', ipa: 'bak', note: 'Doble función: espalda o regresar (come back)' },
+    { en: 'Mind', es: 'Mente', cat: 'El Cuerpo', ipa: 'máind', note: 'También: "Do you mind?" (¿Te molesta?)' },
+
+    { en: 'Child / Children', es: 'Niño/a ➔ Niños/as', cat: 'Familia', ipa: 'chaild ➔ chídren', note: 'Plural irregular sin -s' },
+    { en: 'Woman / Women', es: 'Mujer ➔ Mujeres', cat: 'Familia', ipa: 'úman ➔ uímin', note: 'Cambia la pronunciación de las dos vocales' },
+    { en: 'Man / Men', es: 'Hombre ➔ Hombres', cat: 'Familia', ipa: 'man ➔ men', note: 'Plural irregular' },
+    { en: 'Person / People', es: 'Persona ➔ Gente', cat: 'Familia', ipa: 'pérson ➔ pípol', note: 'People siempre lleva verbo en plural: "People are..."' },
+    { en: 'Wife / Wives', es: 'Esposa ➔ Esposas', cat: 'Familia', ipa: 'uáif ➔ uáivz', note: 'Terminaciones en -fe cambian a -ves' },
+    { en: 'Son', es: 'Hijo varón', cat: 'Familia', ipa: 'san', note: 'Suena exactamente igual que "Sun" (sol)' },
+
+    { en: 'Home', es: 'Hogar, donde vives', cat: 'Casa', ipa: 'jóum', note: 'I go home (sin preposición "to")' },
+    { en: 'House', es: 'Casa (el edificio físico)', cat: 'Casa', ipa: 'jáus', note: 'Refiere a la construcción' },
+    { en: 'Clothes', es: 'Ropa', cat: 'Casa', ipa: 'clóudz', note: 'Siempre plural: "My clothes are in the closet"' },
+    { en: 'Glass / Glasses', es: 'Vaso/Vidrio ➔ Anteojos', cat: 'Casa', ipa: 'glas ➔ glásiz', note: 'En plural significa lentes o gafas' },
+    { en: 'Key', es: 'Llave o clave', cat: 'Casa', ipa: 'ki', note: 'Tanto llave física como clave de acceso' },
+    { en: 'Window', es: 'Ventana', cat: 'Casa', ipa: 'uíndou', note: 'Sustantivo común' },
+
+    { en: 'City', es: 'Ciudad', cat: 'Ciudad', ipa: 'síti', note: 'Plural: cities' },
+    { en: 'Street', es: 'Calle', cat: 'Ciudad', ipa: 'strit', note: 'Usa la preposición "on": On Main Street' },
+    { en: 'School', es: 'Escuela / Colegio', cat: 'Ciudad', ipa: 'skul', note: 'Colegio escolar (universidad es college/university)' },
+    { en: 'Building', es: 'Edificio', cat: 'Ciudad', ipa: 'bílding', note: 'Proviene del verbo build (construir)' },
+
+    { en: 'Money', es: 'Dinero', cat: 'Trabajo', ipa: 'máni', note: 'Incontable: "The money is safe" (no existe moneys)' },
+    { en: 'Job', es: 'Empleo, trabajo puntual', cat: 'Trabajo', ipa: 'yob', note: 'Contable: "A new job"' },
+    { en: 'Bill', es: 'Cuenta, factura o billete', cat: 'Trabajo', ipa: 'bil', note: '"Can I have the bill, please?" en el restaurante' },
+    { en: 'Business', es: 'Negocio, empresa', cat: 'Trabajo', ipa: 'bíznes', note: 'Se pronuncia en 2 sílabas' }
+  ];
+
+  const vocab500List = [
+    { en: 'The', type: 'Funcional', es: 'El, la, los, las', note: 'La palabra #1 más frecuente de todo el idioma inglés' },
+    { en: 'Be (was/were, been)', type: 'Verbo', es: 'Ser o estar', note: 'Verbo irregular base' },
+    { en: 'Have (had)', type: 'Verbo', es: 'Tener; haber', note: 'Verbo auxiliar en tiempos compuestos' },
+    { en: 'Do (did, done)', type: 'Verbo', es: 'Hacer; auxiliar de preguntas', note: 'Auxiliar para presente y pasado' },
+    { en: 'Say (said)', type: 'Verbo', es: 'Decir', note: 'Said se pronuncia "sed"' },
+    { en: 'Get (got)', type: 'Verbo', es: 'Conseguir, llegar, ponerse', note: 'El verbo más versátil en inglés conversacional' },
+    { en: 'Make (made)', type: 'Verbo', es: 'Hacer, crear, fabricar', note: 'Make mistakes, make coffee, make plans' },
+    { en: 'Go (went, gone)', type: 'Verbo', es: 'Ir', note: 'Pasado irregular: went' },
+    { en: 'Know (knew, known)', type: 'Verbo', es: 'Saber, conocer', note: 'La K inicial es completamente muda' },
+    { en: 'Take (took, taken)', type: 'Verbo', es: 'Tomar, llevar', note: 'Take time, take photos, take a shower' },
+    { en: 'See (saw, seen)', type: 'Verbo', es: 'Ver', note: 'Suena igual que "sea" (mar)' },
+    { en: 'Come (came, come)', type: 'Verbo', es: 'Venir', note: 'Pasado: came' },
+    { en: 'Think (thought)', type: 'Verbo', es: 'Pensar, creer', note: 'Thought suena con "o" abierta y gh muda' },
+    { en: 'Find (found)', type: 'Verbo', es: 'Encontrar', note: 'Pasado: found' },
+    { en: 'Give (gave, given)', type: 'Verbo', es: 'Dar', note: 'Pasado: gave' }
+  ];
+
+  const falseFriendsList = [
+    { en: 'Actually', parece: 'Actualmente', es: 'En realidad / De hecho', ejemplo: 'Actually, I prefer morning workouts.' },
+    { en: 'Large', parece: 'Largo', es: 'Grande', ejemplo: 'We have a large room. (Largo se dice "long").' },
+    { en: 'College', parece: 'Colegio', es: 'Universidad / Facultad', ejemplo: 'She studies psychology in college.' },
+    { en: 'Current', parece: 'Corriente', es: 'Actual', ejemplo: 'This is my current schedule.' },
+    { en: 'Policy', parece: 'Policía', es: 'Política / Norma institucional', ejemplo: 'It is the company policy.' },
+    { en: 'Date', parece: 'Dato', es: 'Fecha o Cita romántica', ejemplo: 'What is today\'s date? (Dato se dice "data").' },
+    { en: 'Miss', parece: 'Señorita', es: 'Extrañar o Perder (el transporte)', ejemplo: 'I miss you / I missed the bus.' },
+    { en: 'Pretty', parece: 'Lindo', es: 'Bastante (modificador)', ejemplo: 'It is pretty good! (Está bastante bueno).' }
+  ];
+
   const quizList = [
     {
       level: 'NIVEL A0 • Starter',
@@ -336,94 +430,6 @@ export default function Home() {
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [isAnswerCorrect, setIsAnswerCorrect] = useState<boolean | null>(null);
 
-  // Timer Effect
-  useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (isRunning && timeLeft > 0) {
-      timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
-    } else if (timeLeft === 0 && isRunning) {
-      setIsRunning(false);
-      const earnedXp = pomoMinutes * 10;
-      setXp(prev => prev + earnedXp);
-      setTotalMinutes(prev => prev + pomoMinutes);
-      setWaterDrops(prev => prev + 2);
-      setQuestPomo(true);
-      setWeeklyActive(prev => {
-        const copy = [...prev];
-        copy[0] = true;
-        return copy;
-      });
-      playChimeSound();
-      showSaveNotice(`🎉 ¡Sesión de ${pomoMinutes}m completada! +${earnedXp} XP y +2 💧 Gotitas.`);
-    }
-    return () => clearInterval(timer);
-  }, [isRunning, timeLeft, pomoMinutes]);
-
-  const handleStartTimer = (mins: number) => {
-    playPopSound();
-    setPomoMinutes(mins);
-    setTimeLeft(mins * 60);
-    setIsRunning(true);
-  };
-
-  const plantData = [
-    { icon: '🌱', name: 'Semillita Brotando', desc: 'Regada con tus primeros minutos de inmersión auditiva.' },
-    { icon: '🌿', name: 'Brote Fuerte', desc: 'Creciendo con consistencia y práctica diaria.' },
-    { icon: '🪴', name: 'Planta de Focus', desc: '¡Llena de energía y hojas verdes por tu concentración!' },
-    { icon: '🌸', name: 'Flor Florecida', desc: 'Tu vocabulario florece con cada sesión y tarjeta dominada.' },
-    { icon: '🌳', name: 'Árbol Sabio Dorado', desc: '¡Maestría consolidada! Fluidez y soltura bilingüe.' }
-  ];
-
-  const handleWaterPlant = () => {
-    if (waterDrops > 0) {
-      playChimeSound();
-      setWaterDrops(prev => prev - 1);
-      setPlantStage(prev => (prev < 5 ? prev + 1 : 1));
-      setXp(prev => prev + 25);
-      showSaveNotice(`💧 ¡Regaste tu planta! +25 XP ✨ Vitalidad al 100%`);
-    } else {
-      playPopSound();
-      showSaveNotice('🌧️ Necesitas gotitas de agua. Completa un Pomodoro o domina flashcards para ganar más.');
-    }
-  };
-
-  const handleAnalyzeSpeaking = () => {
-    playPopSound();
-    if (!speakingText.trim()) return;
-    setAnalyzing(true);
-    setTimeout(() => {
-      setFeedback(
-        "🎯 Puntuación Global: 9.6/10 🌸\n\n🔍 Análisis Gramatical: Excelente estructura y tiempo verbal correcto.\n\n✨ Versión Nivel Nativo: 'I genuinely enjoy building consistent learning habits every single day.'\n\n🗣️ Fonética sugerida: Thoroughly (THUR-uh-lee) — enlaza sonidos sin frenar el flujo.\n\n💡 Tip de Fluidez: Tu cadencia es muy natural, continúa respondiendo en voz alta."
-      );
-      setAnalyzing(false);
-      setXp(prev => prev + 50);
-      setWaterDrops(prev => prev + 1);
-      playChimeSound();
-      showSaveNotice('💖 ¡Speaking corregido con IA! +50 XP y +1 💧');
-    }, 1200);
-  };
-
-  const handleAnalyzeWriting = () => {
-    playPopSound();
-    if (!writingText.trim()) return;
-    setIsWritingAnalyzing(true);
-    setTimeout(() => {
-      setWritingFeedback(
-        "📝 Diagnóstico Editorial de Redacción:\n\n✨ Versión Pulida: 'Consistency is the true cornerstone of language fluency. Dedicating twenty focused minutes daily yields significantly better results than cramming once a week.'\n\n💎 Vocabulario Elevado Empleado:\n• Cornerstone (Piedra angular / base sólida)\n• Yields (Produce resultados tangibles)\n• Cramming (Estudio apresurado de último momento)\n\n📌 Guardado: Registro sincronizado automáticamente con tu Notion."
-      );
-      setIsWritingAnalyzing(false);
-      setXp(prev => prev + 60);
-      setWaterDrops(prev => prev + 1);
-      playChimeSound();
-      showSaveNotice('📖 ¡Escrito analizado y guardado! +60 XP y +1 💧');
-    }, 1200);
-  };
-
-  const showSaveNotice = (msg: string) => {
-    setSavedNotice(msg);
-    setTimeout(() => setSavedNotice(null), 3800);
-  };
-
   const handleClaimReward = () => {
     if (questPomo && questCards && questListening && !questClaimed) {
       playChimeSound();
@@ -455,6 +461,11 @@ export default function Home() {
     setSelectedAnswer(null);
     setIsAnswerCorrect(null);
     setCurrentQuizIdx(prev => (prev + 1) % quizList.length);
+  };
+
+  const showSaveNotice = (msg: string) => {
+    setSavedNotice(msg);
+    setTimeout(() => setSavedNotice(null), 3800);
   };
 
   const daysOfWeek = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
@@ -509,7 +520,7 @@ export default function Home() {
         }
       `}</style>
 
-      {/* BARRA LATERAL SALVIA */}
+      {/* BARRA LATERAL */}
       <aside className="w-76 shrink-0 bg-[#E3EFEA] p-5 flex flex-col justify-between border-r border-[#D3E3DD] shadow-[6px_0_24px_rgba(180,200,195,0.18)]">
         <div>
           <div className="clay-card-big p-3.5 mb-5 flex items-center gap-3 bg-[#FFFFFF]/90">
@@ -543,14 +554,15 @@ export default function Home() {
           <nav className="space-y-2">
             {[
               { id: 'pomodoro', label: 'Dashboard & Focus', icon: '⏱️', badge: '15-20m', bg: 'bg-[#FFD6DE]' },
-              { id: 'speaking', label: 'Speaking & Feedback', icon: '🗣️', badge: 'IA Lab', bg: 'bg-[#D9EBD9]' },
+              { id: 'vocabulario', label: 'Vocabulario Esencial', icon: '📖', badge: 'PDFs 700+', bg: 'bg-[#FFF1C5]' },
+              { id: 'flashcards', label: 'Flashcards Activas', icon: '🗂️', badge: 'Reglas A0-C2', bg: 'bg-[#D9EBD9]' },
+              { id: 'quizzes', label: 'Quizzes & Tests', icon: '📝', badge: 'Banco 6', bg: 'bg-[#D4EBF8]' },
               { id: 'cursos', label: 'Biblioteca de Cursos', icon: '📚', badge: '3 Cursos', bg: 'bg-[#FFF1C5]' },
               { id: 'hub', label: 'Hub de Plataformas', icon: '🌐', badge: 'Free', bg: 'bg-[#D4EBF8]' },
+              { id: 'speaking', label: 'Speaking & Feedback', icon: '🗣️', badge: 'IA Lab', bg: 'bg-[#D9EBD9]' },
               { id: 'listening', label: 'Listening & Inmersión', icon: '🎧', badge: 'Audio', bg: 'bg-[#E6DCF5]' },
               { id: 'writing', label: 'Writing Clinic', icon: '✍️', badge: 'Notion', bg: 'bg-[#FFD6DE]' },
               { id: 'milestones', label: 'Ruta de Hitos', icon: '🗺️', badge: 'A0-C2', bg: 'bg-[#FFF1C5]' },
-              { id: 'flashcards', label: 'Flashcards Activas', icon: '🗂️', badge: 'Audio 🔊', bg: 'bg-[#D9EBD9]' },
-              { id: 'quizzes', label: 'Quizzes & Tests', icon: '📝', badge: 'Banco 6', bg: 'bg-[#D4EBF8]' },
             ].map(item => {
               const active = activeTab === item.id;
               return (
@@ -1024,7 +1036,6 @@ export default function Home() {
               </a>
             </div>
 
-            {/* CURSO 1: INGLÉS PRÁCTICO */}
             <div className="clay-card-big p-5 sm:p-6 space-y-4 border-2 border-[#FFE4B5] overflow-hidden">
               <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                 <div className="space-y-1">
@@ -1081,7 +1092,6 @@ export default function Home() {
               </div>
             </div>
 
-            {/* CURSO 2: GRINGO ACADEMY */}
             <div className="clay-card-big p-5 sm:p-6 space-y-4 border-2 border-[#BAE6FD] overflow-hidden">
               <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                 <div className="space-y-1">
@@ -1139,7 +1149,6 @@ export default function Home() {
               </div>
             </div>
 
-            {/* CURSO 3: ACTIVACIÓN NEURAL */}
             <div className="clay-card-big p-5 sm:p-6 space-y-4 border-2 border-[#DDD6FE] overflow-hidden">
               <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                 <div className="space-y-1">
@@ -1491,204 +1500,6 @@ export default function Home() {
                     <li>• <strong>Competencias:</strong> Captar ironías, modismos culturales sutiles y control estilístico total.</li>
                   </ul>
                 </>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* 8. FLASHCARDS ACTIVAS */}
-        {activeTab === 'flashcards' && (
-          <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div>
-                <h1 className="text-2xl font-black text-[#3D352E] tracking-tight flex items-center gap-2">
-                  Smart Flashcards (A0 a C2) <span>🌷</span>
-                </h1>
-                <p className="text-[#7A6E63] text-xs mt-1">Repaso activo con tarjetas táctiles tridimensionales y voz nativa.</p>
-              </div>
-
-              <div className="flex gap-1.5 overflow-x-auto pb-1">
-                {['TODOS', 'A0-A1', 'A2-B1', 'B2-C2'].map(filter => (
-                  <button
-                    key={filter}
-                    onClick={() => {
-                      playPopSound();
-                      setCardLevelFilter(filter);
-                      setCardIndex(0);
-                      setShowAnswer(false);
-                    }}
-                    className={`px-3 py-1.5 rounded-full text-[10px] font-black transition-all ${
-                      cardLevelFilter === filter
-                        ? 'bg-[#FFD6DE] text-[#A84A60] clay-icon-big font-extrabold'
-                        : 'bg-[#FFFFFF] text-[#8C7E72] hover:bg-[#F3ECE1]'
-                    }`}
-                  >
-                    {filter}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div
-              onClick={() => {
-                playPopSound();
-                setShowAnswer(!showAnswer);
-              }}
-              className="clay-card-big p-10 sm:p-14 text-center cursor-pointer hover:scale-[1.01] transition-all min-h-[240px] flex flex-col items-center justify-center space-y-3.5 relative"
-            >
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-black uppercase px-3.5 py-1 rounded-full bg-[#FFD6DE] text-[#A84A60] clay-icon-big inline-block">
-                  {activeCard.lvl} • {activeCard.cat}
-                </span>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    speakEnglish(activeCard.front);
-                  }}
-                  className="w-8 h-8 rounded-full bg-[#FFFFFF] clay-icon-big flex items-center justify-center text-xs hover:scale-110 active:scale-95 transition-transform"
-                  title="Escuchar pronunciación nativa"
-                >
-                  🔊
-                </button>
-              </div>
-
-              <div className="text-xl sm:text-2xl font-black text-[#3D352E]">
-                {showAnswer ? activeCard.back : activeCard.front}
-              </div>
-              <span className="text-[11px] text-[#A89C90] font-bold">
-                {showAnswer ? '💡 Regla y significado' : '👆 Toca la tarjeta para voltear'}
-              </span>
-            </div>
-
-            <div className="flex gap-3">
-              <button
-                onClick={() => {
-                  playPopSound();
-                  setShowAnswer(false);
-                  setCardIndex(prev => prev + 1);
-                }}
-                className="flex-1 py-3.5 rounded-[20px] bg-[#FFFFFF] text-[#5C524A] font-black text-xs clay-icon-big"
-              >
-                ➡️ Siguiente Tarjeta
-              </button>
-              <button
-                onClick={() => {
-                  playChimeSound();
-                  setXp(prev => prev + 20);
-                  setFavoritesCount(prev => prev + 1);
-                  setWaterDrops(prev => prev + 1);
-                  setQuestCards(true);
-                  setShowAnswer(false);
-                  setCardIndex(prev => prev + 1);
-                  showSaveNotice('🎉 ¡Tarjeta dominada! +20 XP y +1 💧');
-                }}
-                className="flex-1 py-3.5 rounded-[20px] bg-[#52B788] text-white font-black text-xs clay-icon-big"
-              >
-                ✅ ¡La domino! (+20 XP)
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* 9. QUIZZES & EVALUACIONES */}
-        {activeTab === 'quizzes' && (
-          <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div>
-                <h1 className="text-2xl font-black text-[#3D352E] tracking-tight flex items-center gap-2">
-                  Quizzes & Evaluaciones <span>🧁</span>
-                </h1>
-                <p className="text-[#7A6E63] text-xs mt-1">Preguntas de diagnóstico progresivas de A0 a C1 con audio nativo y retroalimentación.</p>
-              </div>
-              <div className="clay-inset-pill px-4 py-1.5 text-xs font-black text-[#6B5E55] self-start sm:self-auto">
-                Pregunta {currentQuizIdx + 1} de {quizList.length}
-              </div>
-            </div>
-
-            <div className="clay-card-big p-6 sm:p-7 space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-[10px] font-black uppercase px-3 py-1 rounded-full bg-[#D4EBF8] text-[#1E6091] clay-icon-big inline-block">
-                  {quizList[currentQuizIdx].level}
-                </span>
-                <span className="text-[11px] font-bold text-[#8C7E72]">
-                  Aciertos: +30 XP y +1 💧
-                </span>
-              </div>
-
-              <div className="flex items-start justify-between gap-3">
-                <div className="text-sm sm:text-base font-black text-[#3D352E] leading-snug">
-                  {quizList[currentQuizIdx].question}
-                </div>
-                <button
-                  onClick={() => speakEnglish(quizList[currentQuizIdx].question)}
-                  className="w-8 h-8 rounded-full bg-[#FFFFFF] clay-icon-big flex items-center justify-center text-xs shrink-0 hover:scale-110 active:scale-95 transition-transform"
-                  title="Escuchar la pregunta en inglés"
-                >
-                  🔊
-                </button>
-              </div>
-
-              <div className="space-y-2.5 pt-1">
-                {quizList[currentQuizIdx].options.map((op, idx) => {
-                  const isSelected = selectedAnswer === op.text;
-                  let btnStyle = "bg-[#FFFFFF] text-[#4A4139] border-[#E8DFC8]";
-                  
-                  if (selectedAnswer !== null) {
-                    if (op.correct) {
-                      btnStyle = "bg-[#D9EBD9] text-[#1E523A] border-[#74C69D] font-extrabold";
-                    } else if (isSelected && !op.correct) {
-                      btnStyle = "bg-[#FFD6DE] text-[#A84A60] border-[#FCA5A5] font-extrabold";
-                    } else {
-                      btnStyle = "bg-[#F3EFE6] text-[#A89F91] border-transparent opacity-60";
-                    }
-                  }
-
-                  return (
-                    <div key={idx} className="flex items-center gap-2">
-                      <button
-                        onClick={() => handleSelectQuizOption(op)}
-                        disabled={selectedAnswer !== null}
-                        className={`flex-1 text-left p-3.5 rounded-[20px] text-xs font-black transition-all border clay-icon-big ${btnStyle}`}
-                      >
-                        <span className="flex items-center gap-2.5">
-                          <span className="w-6 h-6 rounded-full bg-white/80 flex items-center justify-center text-[10px] font-black text-[#7A6E63] shadow-sm shrink-0">
-                            {String.fromCharCode(65 + idx)}
-                          </span>
-                          <span>{op.text}</span>
-                        </span>
-                      </button>
-                      <button
-                        onClick={() => speakEnglish(op.text)}
-                        className="w-9 h-9 rounded-[14px] bg-[#FFFFFF] clay-icon-big flex items-center justify-center text-xs shrink-0 hover:scale-110 active:scale-95 transition-transform"
-                        title="Escuchar opción"
-                      >
-                        🔊
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {selectedAnswer !== null && (
-                <div className="space-y-3 pt-2">
-                  <div className={`p-4 rounded-[20px] text-xs font-bold clay-inset-pill leading-relaxed ${
-                    isAnswerCorrect ? 'text-[#1E523A] bg-[#D9EBD9]' : 'text-[#A84A60] bg-[#FFD6DE]'
-                  }`}>
-                    <div className="font-black text-sm mb-0.5">
-                      {isAnswerCorrect ? '🎉 ¡Respuesta Correcta!' : '❌ Incorrecto'}
-                    </div>
-                    {quizList[currentQuizIdx].explanation}
-                  </div>
-
-                  <div className="flex gap-3 pt-1">
-                    <button
-                      onClick={handleNextQuiz}
-                      className="flex-1 py-3.5 rounded-[20px] clay-btn-pink text-xs font-black flex items-center justify-center gap-2"
-                    >
-                      <span>➡️</span> {currentQuizIdx + 1 === quizList.length ? 'Comenzar de Nuevo' : 'Siguiente Pregunta'}
-                    </button>
-                  </div>
-                </div>
               )}
             </div>
           </div>
