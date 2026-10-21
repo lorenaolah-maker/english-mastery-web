@@ -1,29 +1,25 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { vocab200List, vocab500List, falseFriendsList, phrases100List, verbsEssentialList } from './vocabularyData';
+import {
+  vocab200List,
+  vocab500List,
+  falseFriendsList,
+  phrases100List,
+  verbsEssentialList
+} from './vocabularyData';
 
 export default function EnglishMasteryHome() {
-  const [activeTab, setActiveTab] = useState('pomodoro');
+  const [activeTab, setActiveTab] = useState('verbos');
 
   // Métricas
   const [xp, setXp] = useState(0);
-  const [streak, setStreak] = useState(1);
   const [totalMinutes, setTotalMinutes] = useState(0);
-  const [favoritesCount, setFavoritesCount] = useState(0);
   const [waterDrops, setWaterDrops] = useState(3);
   const [plantStage, setPlantStage] = useState(1);
-  const [weeklyActive, setWeeklyActive] = useState<boolean[]>([true, false, false, false, false, false, false]);
+  const [savedNotice, setSavedNotice] = useState<string | null>(null);
 
-  // Quests
-  const [questPomo, setQuestPomo] = useState(false);
-  const [questCards, setQuestCards] = useState(false);
-  const [questListening, setQuestListening] = useState(false);
-  const [questClaimed, setQuestClaimed] = useState(false);
-
-  // Audio Ambiental Lofi
-  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
-  const audioCtxRef = useRef<AudioContext | null>(null);
+  // Audio Táctil Web Audio
   const sfxCtxRef = useRef<AudioContext | null>(null);
 
   const getSfxContext = () => {
@@ -83,15 +79,6 @@ export default function EnglishMasteryHome() {
     } catch {}
   };
 
-  // Frase inspiracional
-  const [quoteIdx, setQuoteIdx] = useState(0);
-  const quotes = [
-    { en: 'Small daily steps every day lead to big changes.', es: 'Pequeños pasos diarios conducen a grandes cambios.' },
-    { en: 'Fluency is consistency in action, not overnight magic.', es: 'La fluidez es constancia en acción, no magia de la noche a la mañana.' },
-    { en: 'Focus for twenty quiet minutes, and let time do the rest.', es: 'Concéntrate veinte minutos en calma y deja que el tiempo haga el resto.' },
-    { en: 'Your dedication today opens global doors tomorrow.', es: 'Tu dedicación de hoy abre puertas globales mañana.' }
-  ];
-
   // Voz nativa Web Speech
   const speakEnglish = (text: string) => {
     playPopSound();
@@ -116,7 +103,6 @@ export default function EnglishMasteryHome() {
   const [pomoMinutes, setPomoMinutes] = useState(15);
   const [timeLeft, setTimeLeft] = useState(15 * 60);
   const [isRunning, setIsRunning] = useState(false);
-  const [savedNotice, setSavedNotice] = useState<string | null>(null);
 
   // Estados de Verbos
   const [verbSearch, setVerbSearch] = useState('');
@@ -143,45 +129,22 @@ export default function EnglishMasteryHome() {
   useEffect(() => {
     const sXp = localStorage.getItem('em_xp');
     const sMins = localStorage.getItem('em_mins');
-    const sStreak = localStorage.getItem('em_streak');
-    const sFavs = localStorage.getItem('em_favs');
     const sWater = localStorage.getItem('em_water');
     const sPlant = localStorage.getItem('em_plant');
-    const sQP = localStorage.getItem('em_qp');
-    const sQC = localStorage.getItem('em_qc');
-    const sQL = localStorage.getItem('em_ql');
-    const sClaimed = localStorage.getItem('em_claimed');
-    const sWeek = localStorage.getItem('em_week');
 
     if (sXp) setXp(Number(sXp));
     if (sMins) setTotalMinutes(Number(sMins));
-    if (sStreak) setStreak(Number(sStreak));
-    if (sFavs) setFavoritesCount(Number(sFavs));
     if (sWater) setWaterDrops(Number(sWater));
     if (sPlant) setPlantStage(Number(sPlant));
-    if (sQP === 'true') setQuestPomo(true);
-    if (sQC === 'true') setQuestCards(true);
-    if (sQL === 'true') setQuestListening(true);
-    if (sClaimed === 'true') setQuestClaimed(true);
-    if (sWeek) {
-      try { setWeeklyActive(JSON.parse(sWeek)); } catch {}
-    }
   }, []);
 
   // Guardar datos
   useEffect(() => {
     localStorage.setItem('em_xp', xp.toString());
     localStorage.setItem('em_mins', totalMinutes.toString());
-    localStorage.setItem('em_streak', streak.toString());
-    localStorage.setItem('em_favs', favoritesCount.toString());
     localStorage.setItem('em_water', waterDrops.toString());
     localStorage.setItem('em_plant', plantStage.toString());
-    localStorage.setItem('em_qp', questPomo.toString());
-    localStorage.setItem('em_qc', questCards.toString());
-    localStorage.setItem('em_ql', questListening.toString());
-    localStorage.setItem('em_claimed', questClaimed.toString());
-    localStorage.setItem('em_week', JSON.stringify(weeklyActive));
-  }, [xp, totalMinutes, streak, favoritesCount, waterDrops, plantStage, questPomo, questCards, questListening, questClaimed, weeklyActive]);
+  }, [xp, totalMinutes, waterDrops, plantStage]);
 
   const showSaveNotice = (msg: string) => {
     setSavedNotice(msg);
@@ -195,15 +158,8 @@ export default function EnglishMasteryHome() {
       localStorage.clear();
       setXp(0);
       setTotalMinutes(0);
-      setStreak(1);
-      setFavoritesCount(0);
       setWaterDrops(3);
       setPlantStage(1);
-      setQuestPomo(false);
-      setQuestCards(false);
-      setQuestListening(false);
-      setQuestClaimed(false);
-      setWeeklyActive([true, false, false, false, false, false, false]);
       playChimeSound();
       showSaveNotice('✨ ¡Progreso reiniciado a cero con éxito!');
     }
@@ -233,18 +189,14 @@ export default function EnglishMasteryHome() {
       setXp(prev => prev + earnedXp);
       setTotalMinutes(prev => prev + pomoMinutes);
       setWaterDrops(prev => prev + 2);
-      setQuestPomo(true);
       playChimeSound();
       showSaveNotice(`¡Sesión de ${pomoMinutes}m completada! +${earnedXp} XP`);
     }
     return () => clearInterval(timer);
   }, [isRunning, timeLeft, pomoMinutes]);
 
-  const daysOfWeek = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
-
-  // Lista de 14 plataformas del Hub (las 7 previas + las 7 nuevas de tus capturas)
+  // Lista de 14 plataformas (7 originales + 7 nuevas de tus capturas)
   const platformsList = [
-    // Nuevas de tus capturas
     { title: 'BaBaDum (1500 Palabras)', desc: 'Juega y aprende 1500 palabras con ilustraciones y 5 juegos interactivos rápidos.', link: 'https://babadum.com', btn: 'Jugar BaBaDum', icon: '🦅', bg: 'bg-[#FFF1C5]' },
     { title: 'inglés.com (Diccionario Definitivo)', desc: 'Traductor, vocabulario, comparador de palabras y conjugador verbal completo.', link: 'https://www.ingles.com', btn: 'Abrir inglés.com', icon: '📖', bg: 'bg-[#D4EBF8]' },
     { title: 'Cambridge Learning Activities', desc: '175 actividades interactivas oficiales de gramática, vocabulario y listening por nivel.', link: 'https://www.cambridgeenglish.org/learning-english/activities-for-learners/', btn: 'Abrir Cambridge', icon: '🏛️', bg: 'bg-[#D9EBD9]' },
@@ -252,7 +204,6 @@ export default function EnglishMasteryHome() {
     { title: 'TED-Ed Lessons', desc: 'Animaciones cortas y conferencias educativas con preguntas de comprensión en inglés.', link: 'https://ed.ted.com/lessons', btn: 'Ver TED-Ed', icon: '🎬', bg: 'bg-[#FFD6DE]' },
     { title: 'LanguageGuide.org', desc: 'Exploración de vocabulario visual con pronunciación instantánea al pasar el cursor.', link: 'https://www.languageguide.org/english/', btn: 'Abrir LanguageGuide', icon: '🌍', bg: 'bg-[#FFF1C5]' },
     { title: 'Games to Learn English', desc: 'Juegos online para entrenar Monster Vocab, adjetivos, frases y gramática jugando.', link: 'https://www.gamestolearnenglish.com', btn: 'Abrir Games English', icon: '🎮', bg: 'bg-[#D4EBF8]' },
-    // Las 7 que ya tenías
     { title: 'Cambridge Dictionary', desc: 'Diccionario con audio británico y americano oficial y transcripción fonética IPA.', link: 'https://dictionary.cambridge.org', btn: 'Abrir Diccionario', icon: '📕', bg: 'bg-[#FFD6DE]' },
     { title: 'AVI UNAM (Práctica Libre)', desc: 'Fichas gramaticales, audios y ejercicios de autoevaluación gratuitos de A1 a B2.', link: 'https://avi.cuaed.unam.mx/idioma-ingles.html', btn: 'Abrir AVI UNAM', icon: '🎓', bg: 'bg-[#FFF1C5]' },
     { title: 'Speak & Improve (Cambridge IA)', desc: 'Evaluador acústico oficial de Cambridge con IA para medir tu pronunciación y nivel.', link: 'https://speakandimprove.com', btn: 'Abrir Speak&Improve', icon: '🤖', bg: 'bg-[#D9EBD9]' },
@@ -308,11 +259,11 @@ export default function EnglishMasteryHome() {
 
           <nav className="space-y-1.5">
             {[
-              { id: 'pomodoro', label: 'Dashboard & Focus', icon: '⏱️', badge: 'Focus', bg: 'bg-[#FFD6DE]' },
               { id: 'verbos', label: 'Verbos Esenciales', icon: '⚡', badge: 'Pas/Pres/Fut', bg: 'bg-[#FFF1C5]' },
               { id: 'frases', label: '100 Frases Clave (Bono 5)', icon: '💬', badge: '10 Situaciones', bg: 'bg-[#D9EBD9]' },
               { id: 'vocabulario', label: 'Vocabulario (PDFs)', icon: '📖', badge: '200+ Palabras', bg: 'bg-[#D4EBF8]' },
               { id: 'hub', label: 'Hub de Plataformas', icon: '🌐', badge: '14 Sitios', bg: 'bg-[#E6DCF5]' },
+              { id: 'pomodoro', label: 'Dashboard & Focus', icon: '⏱️', badge: 'Focus', bg: 'bg-[#FFD6DE]' },
               { id: 'cursos', label: 'Biblioteca de Cursos', icon: '📚', badge: '3 Cursos', bg: 'bg-[#FFF1C5]' },
             ].map(item => {
               const active = activeTab === item.id;
@@ -373,116 +324,7 @@ export default function EnglishMasteryHome() {
           </div>
         )}
 
-        {/* 1. DASHBOARD & FOCUS */}
-        {activeTab === 'pomodoro' && (
-          <div className="space-y-6">
-            <div className="bg-gradient-to-r from-[#FFF4F6] via-[#FFF9F3] to-white rounded-[28px] p-6 sm:p-7 flex flex-col sm:flex-row items-center justify-between gap-5 border border-[#FADCD5] shadow-[8px_10px_22px_rgba(210,190,175,0.22)]">
-              <div className="space-y-2 z-10 w-full sm:w-auto">
-                <div className="flex items-center gap-2 text-xs font-black text-[#A84A60]">
-                  <span>Good Morning, Lorena!</span>
-                  <span>☀️</span>
-                </div>
-                <h1 className="text-2xl font-black text-[#3D352E] tracking-tight leading-tight">
-                  Let&apos;s master your English today! 🎶
-                </h1>
-                <p className="text-xs text-[#7A6E63] max-w-md font-medium">
-                  Repasa las 100 frases clave del Bono 5 y entrena tus verbos con bloques de inmersión.
-                </p>
-                <div className="pt-2 flex flex-wrap gap-2.5">
-                  <button
-                    onClick={() => {
-                      playPopSound();
-                      setIsRunning(true);
-                      setTimeLeft(pomoMinutes * 60);
-                    }}
-                    className="px-5 py-2.5 rounded-[20px] bg-gradient-to-r from-[#FFAAA6] to-[#FF85A1] text-xs font-black text-white flex items-center gap-2 shadow-sm"
-                  >
-                    <span>▶</span> Play Focus ({pomoMinutes}m)
-                  </button>
-                  <button
-                    onClick={handleWaterPlant}
-                    className="px-4 py-2.5 rounded-[20px] bg-[#D4EBF8] text-[#0369A1] text-xs font-black flex items-center gap-1.5 shadow-sm"
-                  >
-                    <span>💧</span> Regar Jardín ({waterDrops})
-                  </button>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <div
-                  onClick={handleWaterPlant}
-                  className="w-24 h-24 rounded-[24px] bg-[#EAF5EC] p-2 flex flex-col items-center justify-center cursor-pointer hover:scale-105 transition-all text-center border-2 border-[#CBEAD0] shadow-sm"
-                >
-                  <span className="text-3xl animate-bounce">{plantData[plantStage - 1].icon}</span>
-                  <span className="text-[9px] font-black text-[#266245] mt-1 line-clamp-1">{plantData[plantStage - 1].name}</span>
-                  <span className="text-[8px] text-[#3E8062] font-bold">Nivel {plantStage}/5</span>
-                </div>
-              </div>
-            </div>
-
-            {/* CRONOMETRO */}
-            <div className="bg-white rounded-[28px] p-6 space-y-4 shadow-[8px_10px_22px_rgba(210,190,175,0.22)]">
-              <div className="flex justify-between items-center">
-                <div>
-                  <span className="text-[10px] uppercase font-black px-3 py-1 rounded-full bg-[#EAF5EC] text-[#266245] inline-block">
-                    Temporizador de Inmersión ⏱️
-                  </span>
-                  <div className="text-base font-black text-[#3D352E] mt-1">Bloque de Estudio Focalizado</div>
-                </div>
-                <div className="text-3xl font-black font-mono text-[#FF85A1] bg-[#F3ECE1] rounded-[20px] px-5 py-2 shadow-inner">
-                  {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-3">
-                {[15, 20, 25].map(mins => (
-                  <button
-                    key={mins}
-                    onClick={() => {
-                      playPopSound();
-                      setPomoMinutes(mins);
-                      setTimeLeft(mins * 60);
-                      setIsRunning(false);
-                    }}
-                    className={`py-2.5 rounded-[18px] text-xs font-black transition-all ${
-                      pomoMinutes === mins ? 'bg-[#FFD6DE] text-[#A84A60]' : 'bg-white text-[#695F56] border'
-                    }`}
-                  >
-                    🌸 {mins} Minutos
-                  </button>
-                ))}
-              </div>
-
-              <div className="flex gap-3">
-                <button
-                  onClick={() => {
-                    playPopSound();
-                    setIsRunning(!isRunning);
-                  }}
-                  className={`flex-1 py-3.5 rounded-[20px] text-xs font-black text-white transition-all ${
-                    isRunning ? 'bg-[#FF85A1]' : 'bg-[#52B788]'
-                  }`}
-                >
-                  {isRunning ? '⏸️ Pausar Bloque' : '▶️ Iniciar Estudio (+XP)'}
-                </button>
-                <button
-                  onClick={() => {
-                    playPopSound();
-                    setIsRunning(false);
-                    setTimeLeft(pomoMinutes * 60);
-                  }}
-                  className="px-5 py-3.5 rounded-[20px] text-xs font-black bg-white text-[#695F56] border"
-                >
-                  ↺ Reiniciar
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ========================================================= */}
-        {/* 2. VERBOS ESENCIALES (PRESENTE, PASADO, FUTURO, SIGNIFICADO) */}
-        {/* ========================================================= */}
+        {/* 1. VERBOS ESENCIALES */}
         {activeTab === 'verbos' && (
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -513,7 +355,6 @@ export default function EnglishMasteryHome() {
               </div>
             </div>
 
-            {/* BUSCADOR DE VERBOS */}
             <div className="bg-white rounded-[24px] p-4 flex items-center gap-3 shadow-[6px_8px_18px_rgba(210,190,175,0.18)]">
               <span className="text-lg">🔍</span>
               <input
@@ -528,7 +369,6 @@ export default function EnglishMasteryHome() {
               )}
             </div>
 
-            {/* TABLA INTERACTIVA DE VERBOS */}
             <div className="space-y-3">
               {filteredVerbs.map((v, idx) => (
                 <div
@@ -594,9 +434,7 @@ export default function EnglishMasteryHome() {
           </div>
         )}
 
-        {/* ========================================================= */}
-        {/* 3. LAS 100 FRASES CLAVE (DEL PDF BONO 5) */}
-        {/* ========================================================= */}
+        {/* 2. 100 FRASES DEL BONO 5 */}
         {activeTab === 'frases' && (
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -609,7 +447,6 @@ export default function EnglishMasteryHome() {
                 </p>
               </div>
 
-              {/* SELECTOR DE SITUACIÓN */}
               <select
                 value={selectedSituation}
                 onChange={e => {
@@ -625,7 +462,6 @@ export default function EnglishMasteryHome() {
               </select>
             </div>
 
-            {/* BUSCADOR DE FRASES */}
             <div className="bg-white rounded-[24px] p-4 flex items-center gap-3 shadow-[6px_8px_18px_rgba(210,190,175,0.18)]">
               <span className="text-lg">🔍</span>
               <input
@@ -640,7 +476,6 @@ export default function EnglishMasteryHome() {
               )}
             </div>
 
-            {/* LISTA DE FRASES */}
             <div className="grid grid-cols-1 gap-3.5">
               {filteredPhrases.map((phrase, idx) => (
                 <div
@@ -675,9 +510,7 @@ export default function EnglishMasteryHome() {
           </div>
         )}
 
-        {/* ========================================================= */}
-        {/* 4. VOCABULARIO ESENCIAL (200 SUSTANTIVOS & 500 FRECUENTES) */}
-        {/* ========================================================= */}
+        {/* 3. VOCABULARIO (200 SUSTANTIVOS & 500 PALABRAS) */}
         {activeTab === 'vocabulario' && (
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -746,9 +579,7 @@ export default function EnglishMasteryHome() {
           </div>
         )}
 
-        {/* ========================================================= */}
-        {/* 5. HUB DE PLATAFORMAS (14 PLATAFORMAS EN TOTAL) */}
-        {/* ========================================================= */}
+        {/* 4. HUB DE PLATAFORMAS (14 PLATAFORMAS) */}
         {activeTab === 'hub' && (
           <div className="space-y-6">
             <div>
@@ -756,7 +587,7 @@ export default function EnglishMasteryHome() {
                 Hub de Plataformas & Recursos Recomendados <span>🌐</span>
               </h1>
               <p className="text-[#7A6E63] text-xs mt-1">
-                Tus 14 plataformas gratuitas para entrenar vocabulario, listening, gramática y juegos.
+                Tus 14 plataformas gratuitas para entrenar vocabulario, listening, gramática y juegos interactivos.
               </p>
             </div>
 
@@ -787,8 +618,69 @@ export default function EnglishMasteryHome() {
           </div>
         )}
 
-        {/* ========================================================= */}
-        {/* 6. BIBLIOTECA DE CURSOS */}
+        {/* 5. DASHBOARD & FOCUS */}
+        {activeTab === 'pomodoro' && (
+          <div className="space-y-6">
+            <div className="bg-white rounded-[28px] p-6 space-y-4 shadow-[8px_10px_22px_rgba(210,190,175,0.22)]">
+              <div className="flex justify-between items-center">
+                <div>
+                  <span className="text-[10px] uppercase font-black px-3 py-1 rounded-full bg-[#EAF5EC] text-[#266245] inline-block">
+                    Temporizador de Inmersión ⏱️
+                  </span>
+                  <div className="text-base font-black text-[#3D352E] mt-1">Bloque de Estudio Focalizado</div>
+                </div>
+                <div className="text-3xl font-black font-mono text-[#FF85A1] bg-[#F3ECE1] rounded-[20px] px-5 py-2 shadow-inner">
+                  {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                {[15, 20, 25].map(mins => (
+                  <button
+                    key={mins}
+                    onClick={() => {
+                      playPopSound();
+                      setPomoMinutes(mins);
+                      setTimeLeft(mins * 60);
+                      setIsRunning(false);
+                    }}
+                    className={`py-2.5 rounded-[18px] text-xs font-black transition-all ${
+                      pomoMinutes === mins ? 'bg-[#FFD6DE] text-[#A84A60]' : 'bg-white text-[#695F56] border'
+                    }`}
+                  >
+                    🌸 {mins} Minutos
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    playPopSound();
+                    setIsRunning(!isRunning);
+                  }}
+                  className={`flex-1 py-3.5 rounded-[20px] text-xs font-black text-white transition-all ${
+                    isRunning ? 'bg-[#FF85A1]' : 'bg-[#52B788]'
+                  }`}
+                >
+                  {isRunning ? '⏸️ Pausar Bloque' : '▶️ Iniciar Estudio (+XP)'}
+                </button>
+                <button
+                  onClick={() => {
+                    playPopSound();
+                    setIsRunning(false);
+                    setTimeLeft(pomoMinutes * 60);
+                  }}
+                  className="px-5 py-3.5 rounded-[20px] text-xs font-black bg-white text-[#695F56] border"
+                >
+                  ↺ Reiniciar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 6. CURSOS */}
         {activeTab === 'cursos' && (
           <div className="space-y-6">
             <div>
