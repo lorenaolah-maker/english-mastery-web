@@ -10,16 +10,19 @@ import {
 } from './vocabularyData';
 
 export default function EnglishMasteryHome() {
-  const [activeTab, setActiveTab] = useState('verbos');
+  const [activeTab, setActiveTab] = useState('pomodoro');
 
   // Métricas
   const [xp, setXp] = useState(0);
+  const [streak, setStreak] = useState(1);
   const [totalMinutes, setTotalMinutes] = useState(0);
   const [waterDrops, setWaterDrops] = useState(3);
   const [plantStage, setPlantStage] = useState(1);
-  const [savedNotice, setSavedNotice] = useState<string | null>(null);
+  const [weeklyActive, setWeeklyActive] = useState<boolean[]>([true, false, false, false, false, false, false]);
 
-  // Audio Táctil Web Audio
+  // Audio Ambiental Lofi / Lluvia
+  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
+  const audioCtxRef = useRef<AudioContext | null>(null);
   const sfxCtxRef = useRef<AudioContext | null>(null);
 
   const getSfxContext = () => {
@@ -79,6 +82,15 @@ export default function EnglishMasteryHome() {
     } catch {}
   };
 
+  // Frase inspiracional
+  const [quoteIdx, setQuoteIdx] = useState(0);
+  const quotes = [
+    { en: 'Small daily steps every day lead to big changes.', es: 'Pequeños pasos diarios conducen a grandes cambios.' },
+    { en: 'Fluency is consistency in action, not overnight magic.', es: 'La fluidez es constancia en acción, no magia de la noche a la mañana.' },
+    { en: 'Focus for twenty quiet minutes, and let time do the rest.', es: 'Concéntrate veinte minutos en calma y deja que el tiempo haga el resto.' },
+    { en: 'Your dedication today opens global doors tomorrow.', es: 'Tu dedicación de hoy abre puertas globales mañana.' }
+  ];
+
   // Voz nativa Web Speech
   const speakEnglish = (text: string) => {
     playPopSound();
@@ -103,6 +115,85 @@ export default function EnglishMasteryHome() {
   const [pomoMinutes, setPomoMinutes] = useState(15);
   const [timeLeft, setTimeLeft] = useState(15 * 60);
   const [isRunning, setIsRunning] = useState(false);
+  const [savedNotice, setSavedNotice] = useState<string | null>(null);
+
+  // Estados de Flashcards
+  const flashcardsData = [
+    { cat: 'Viajes & Hotel', front: "Where's the check-in counter?", back: '¿Dónde está el mostrador de check-in? (/uérs de chék-in káunter/)' },
+    { cat: 'Restaurante', front: 'Can I have the check, please?', back: '¿Me trae la cuenta, por favor? (/kan ái jav de chek, plis/)' },
+    { cat: 'Frase Salvavidas', front: 'Could you speak more slowly, please?', back: '¿Podrías hablar más despacio, por favor? (/kud iu spík mor slóuli/)' },
+    { cat: 'Conversación', front: "I don't think we've met before.", back: 'Creo que no nos conocíamos. (/ái dóunt zink uív met bifór/)' },
+    { cat: 'Compras', front: 'Can I try it on?', back: '¿Me lo puedo probar? (/kan ái trái it on/)' },
+    { cat: 'Verbos Clave', front: 'Get (Present) ➔ Got (Past)', back: 'Conseguir, llegar, ponerse (/guet · got/)' },
+    { cat: 'Verbos Clave', front: 'Think (Present) ➔ Thought (Past)', back: 'Pensar, creer (/zink · zot/)' },
+    { cat: 'Falsos Amigos', front: 'Actually = ???', back: 'Significa "En realidad / De hecho", ¡NO "Actualmente"!' }
+  ];
+  const [cardIndex, setCardIndex] = useState(0);
+  const [isFlipped, setIsFlipped] = useState(false);
+  const [cardsMastered, setCardsMastered] = useState(0);
+
+  // Estados de Quizzes Interactivos
+  const quizQuestions = [
+    {
+      q: '¿Cómo pides educadamente que alguien hable más despacio?',
+      options: [
+        'A) Speak fast, please!',
+        'B) Could you speak more slowly, please?',
+        'C) I want slow talk now.',
+        'D) What does slowly mean?'
+      ],
+      correct: 1,
+      explain: 'B es la fórmula cortés correcta del Bono 5: "Could you speak more slowly, please?".'
+    },
+    {
+      q: '¿Cuál es el pasado simple irregular del verbo "Think" (pensar)?',
+      options: [
+        'A) Thinked',
+        'B) Thank',
+        'C) Thought',
+        'D) Thunk'
+      ],
+      correct: 2,
+      explain: 'El pasado de Think es Thought (/zot/).'
+    },
+    {
+      q: '¿Qué significa realmente el falso amigo "Actually"?',
+      options: [
+        'A) Actualmente',
+        'B) En realidad / De hecho',
+        'C) En acción',
+        'D) A menudo'
+      ],
+      correct: 1,
+      explain: 'Actually significa "de hecho" o "en realidad". "Actualmente" se dice Currently o Nowadays.'
+    },
+    {
+      q: '¿Cómo pides la cuenta en un restaurante en EE.UU.?',
+      options: [
+        'A) Give me the cost',
+        'B) Can I have the check, please?',
+        'C) The bill is finished',
+        'D) Money please'
+      ],
+      correct: 1,
+      explain: 'En EE.UU. se dice "the check" y en Reino Unido "the bill".'
+    },
+    {
+      q: '¿Cuál es el pasado del verbo irregular "Go" (ir)?',
+      options: [
+        'A) Gone',
+        'B) Went',
+        'C) Goed',
+        'D) Going'
+      ],
+      correct: 1,
+      explain: 'Go en pasado simple es Went. (Gone es el participio).'
+    }
+  ];
+  const [quizIdx, setQuizIdx] = useState(0);
+  const [selectedOption, setSelectedOption] = useState<number | null>(null);
+  const [quizScore, setQuizScore] = useState(0);
+  const [quizFeedback, setQuizFeedback] = useState<string | null>(null);
 
   // Estados de Verbos
   const [verbSearch, setVerbSearch] = useState('');
@@ -125,26 +216,37 @@ export default function EnglishMasteryHome() {
     { icon: '🌳', name: 'Árbol Sabio Dorado' }
   ];
 
-  // Cargar datos
+  // Cargar datos guardados
   useEffect(() => {
     const sXp = localStorage.getItem('em_xp');
     const sMins = localStorage.getItem('em_mins');
+    const sStreak = localStorage.getItem('em_streak');
     const sWater = localStorage.getItem('em_water');
     const sPlant = localStorage.getItem('em_plant');
+    const sCards = localStorage.getItem('em_mastered_cards');
+    const sWeek = localStorage.getItem('em_week');
 
     if (sXp) setXp(Number(sXp));
     if (sMins) setTotalMinutes(Number(sMins));
+    if (sStreak) setStreak(Number(sStreak));
     if (sWater) setWaterDrops(Number(sWater));
     if (sPlant) setPlantStage(Number(sPlant));
+    if (sCards) setCardsMastered(Number(sCards));
+    if (sWeek) {
+      try { setWeeklyActive(JSON.parse(sWeek)); } catch {}
+    }
   }, []);
 
   // Guardar datos
   useEffect(() => {
     localStorage.setItem('em_xp', xp.toString());
     localStorage.setItem('em_mins', totalMinutes.toString());
+    localStorage.setItem('em_streak', streak.toString());
     localStorage.setItem('em_water', waterDrops.toString());
     localStorage.setItem('em_plant', plantStage.toString());
-  }, [xp, totalMinutes, waterDrops, plantStage]);
+    localStorage.setItem('em_mastered_cards', cardsMastered.toString());
+    localStorage.setItem('em_week', JSON.stringify(weeklyActive));
+  }, [xp, totalMinutes, streak, waterDrops, plantStage, cardsMastered, weeklyActive]);
 
   const showSaveNotice = (msg: string) => {
     setSavedNotice(msg);
@@ -158,8 +260,11 @@ export default function EnglishMasteryHome() {
       localStorage.clear();
       setXp(0);
       setTotalMinutes(0);
+      setStreak(1);
       setWaterDrops(3);
       setPlantStage(1);
+      setCardsMastered(0);
+      setWeeklyActive([true, false, false, false, false, false, false]);
       playChimeSound();
       showSaveNotice('✨ ¡Progreso reiniciado a cero con éxito!');
     }
@@ -175,6 +280,51 @@ export default function EnglishMasteryHome() {
     } else {
       playPopSound();
       showSaveNotice('Necesitas gotitas de agua. Completa un Pomodoro para ganar más.');
+    }
+  };
+
+  const toggleFocusAudio = () => {
+    playPopSound();
+    if (isAudioPlaying) {
+      if (audioCtxRef.current) {
+        audioCtxRef.current.close();
+        audioCtxRef.current = null;
+      }
+      setIsAudioPlaying(false);
+    } else {
+      try {
+        const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+        const ctx = new AudioCtx();
+        audioCtxRef.current = ctx;
+
+        const bufferSize = ctx.sampleRate * 2;
+        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+        const output = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          output[i] = Math.random() * 2 - 1;
+        }
+
+        const whiteNoise = ctx.createBufferSource();
+        whiteNoise.buffer = buffer;
+        whiteNoise.loop = true;
+
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(650, ctx.currentTime);
+
+        const gainNode = ctx.createGain();
+        gainNode.gain.setValueAtTime(0.06, ctx.currentTime);
+
+        whiteNoise.connect(filter);
+        filter.connect(gainNode);
+        gainNode.connect(ctx.destination);
+
+        whiteNoise.start();
+        setIsAudioPlaying(true);
+        showSaveNotice('🌧️ Audio ambiental relajante activado');
+      } catch {
+        showSaveNotice('Toca la pantalla para activar el audio');
+      }
     }
   };
 
@@ -195,7 +345,9 @@ export default function EnglishMasteryHome() {
     return () => clearInterval(timer);
   }, [isRunning, timeLeft, pomoMinutes]);
 
-  // Lista de 14 plataformas (7 originales + 7 nuevas de tus capturas)
+  const daysOfWeek = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+
+  // 14 Plataformas del Hub
   const platformsList = [
     { title: 'BaBaDum (1500 Palabras)', desc: 'Juega y aprende 1500 palabras con ilustraciones y 5 juegos interactivos rápidos.', link: 'https://babadum.com', btn: 'Jugar BaBaDum', icon: '🦅', bg: 'bg-[#FFF1C5]' },
     { title: 'inglés.com (Diccionario Definitivo)', desc: 'Traductor, vocabulario, comparador de palabras y conjugador verbal completo.', link: 'https://www.ingles.com', btn: 'Abrir inglés.com', icon: '📖', bg: 'bg-[#D4EBF8]' },
@@ -252,18 +404,20 @@ export default function EnglishMasteryHome() {
                 English Mastery
               </div>
               <div className="text-[10px] text-[#3E8062] font-black mt-0.5">
-                ⚡ A0 ➔ C2 • Bono 5 & Verbos
+                ⚡ A0 ➔ C2 • Full English Hub
               </div>
             </div>
           </div>
 
           <nav className="space-y-1.5">
             {[
+              { id: 'pomodoro', label: 'Dashboard & Focus', icon: '⏱️', badge: 'Focus', bg: 'bg-[#FFD6DE]' },
+              { id: 'flashcards', label: 'Flashcards de Repaso', icon: '🗂️', badge: `${cardsMastered} Dominadas`, bg: 'bg-[#FFF1C5]' },
+              { id: 'quizzes', label: 'Quizzes & Diagnóstico', icon: '🎯', badge: 'Test', bg: 'bg-[#D9EBD9]' },
               { id: 'verbos', label: 'Verbos Esenciales', icon: '⚡', badge: 'Pas/Pres/Fut', bg: 'bg-[#FFF1C5]' },
               { id: 'frases', label: '100 Frases Clave (Bono 5)', icon: '💬', badge: '10 Situaciones', bg: 'bg-[#D9EBD9]' },
               { id: 'vocabulario', label: 'Vocabulario (PDFs)', icon: '📖', badge: '200+ Palabras', bg: 'bg-[#D4EBF8]' },
               { id: 'hub', label: 'Hub de Plataformas', icon: '🌐', badge: '14 Sitios', bg: 'bg-[#E6DCF5]' },
-              { id: 'pomodoro', label: 'Dashboard & Focus', icon: '⏱️', badge: 'Focus', bg: 'bg-[#FFD6DE]' },
               { id: 'cursos', label: 'Biblioteca de Cursos', icon: '📚', badge: '3 Cursos', bg: 'bg-[#FFF1C5]' },
             ].map(item => {
               const active = activeTab === item.id;
@@ -324,14 +478,354 @@ export default function EnglishMasteryHome() {
           </div>
         )}
 
-        {/* 1. VERBOS ESENCIALES */}
+        {/* CABECERA INSPIRACIONAL */}
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <span className="text-[10px] font-black uppercase tracking-wider text-[#4E7267] bg-[#E3EFEA] px-3 py-1 rounded-full">
+              Santuario de Fluidez & Aprendizaje Activo 🌿
+            </span>
+            <h1 className="text-2xl font-black text-[#3D352E] tracking-tight mt-1">
+              English Mastery Hub
+            </h1>
+          </div>
+
+          <div
+            onClick={() => {
+              playPopSound();
+              setQuoteIdx((quoteIdx + 1) % quotes.length);
+            }}
+            className="hidden sm:flex items-center gap-3 bg-white p-3.5 rounded-[22px] max-w-md cursor-pointer hover:scale-[1.01] transition-transform shadow-[6px_8px_18px_rgba(210,190,175,0.2)] border border-[#F3ECE1]"
+            title="Toca para cambiar de frase"
+          >
+            <span className="text-2xl">💬</span>
+            <div className="min-w-0">
+              <p className="text-[11px] font-bold text-[#3D352E] italic line-clamp-1">&quot;{quotes[quoteIdx].en}&quot;</p>
+              <span className="text-[10px] font-black text-[#7A6E63]">— {quotes[quoteIdx].es}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* 1. DASHBOARD & FOCUS */}
+        {activeTab === 'pomodoro' && (
+          <div className="space-y-6">
+            <div className="bg-gradient-to-r from-[#FFF4F6] via-[#FFF9F3] to-white rounded-[28px] p-6 sm:p-7 flex flex-col sm:flex-row items-center justify-between gap-5 border border-[#FADCD5] shadow-[8px_10px_22px_rgba(210,190,175,0.22)]">
+              <div className="space-y-2 z-10 w-full sm:w-auto">
+                <div className="flex items-center gap-2 text-xs font-black text-[#A84A60]">
+                  <span>Good Morning, Lorena!</span>
+                  <span>☀️</span>
+                </div>
+                <h2 className="text-2xl font-black text-[#3D352E] tracking-tight leading-tight">
+                  Let&apos;s master your English today! 🎶
+                </h2>
+                <p className="text-xs text-[#7A6E63] max-w-md font-medium">
+                  Repasa las 100 frases clave del Bono 5, practica tus flashcards y entrena tus verbos con bloques de inmersión.
+                </p>
+                <div className="pt-2 flex flex-wrap gap-2.5">
+                  <button
+                    onClick={() => {
+                      playPopSound();
+                      setIsRunning(true);
+                      setTimeLeft(pomoMinutes * 60);
+                    }}
+                    className="px-5 py-2.5 rounded-[20px] bg-gradient-to-r from-[#FFAAA6] to-[#FF85A1] text-xs font-black text-white flex items-center gap-2 shadow-sm"
+                  >
+                    <span>▶</span> Play Focus ({pomoMinutes}m)
+                  </button>
+                  <button
+                    onClick={handleWaterPlant}
+                    className="px-4 py-2.5 rounded-[20px] bg-[#D4EBF8] text-[#0369A1] text-xs font-black flex items-center gap-1.5 shadow-sm"
+                  >
+                    <span>💧</span> Regar Jardín ({waterDrops})
+                  </button>
+                  <button
+                    onClick={toggleFocusAudio}
+                    className={`px-4 py-2.5 rounded-[20px] text-xs font-black flex items-center gap-1.5 shadow-sm transition-all ${
+                      isAudioPlaying ? 'bg-[#D9EBD9] text-[#1E523A] animate-pulse' : 'bg-white text-[#7A6E63] border'
+                    }`}
+                  >
+                    <span>{isAudioPlaying ? '🌧️' : '🎧'}</span> {isAudioPlaying ? 'Lluvia Relajante Activa' : 'Lluvia Suave'}
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div
+                  onClick={handleWaterPlant}
+                  className="w-24 h-24 rounded-[24px] bg-[#EAF5EC] p-2 flex flex-col items-center justify-center cursor-pointer hover:scale-105 transition-all text-center border-2 border-[#CBEAD0] shadow-sm"
+                >
+                  <span className="text-3xl animate-bounce">{plantData[plantStage - 1].icon}</span>
+                  <span className="text-[9px] font-black text-[#266245] mt-1 line-clamp-1">{plantData[plantStage - 1].name}</span>
+                  <span className="text-[8px] text-[#3E8062] font-bold">Nivel {plantStage}/5</span>
+                </div>
+              </div>
+            </div>
+
+            {/* CRONOMETRO */}
+            <div className="bg-white rounded-[28px] p-6 space-y-4 shadow-[8px_10px_22px_rgba(210,190,175,0.22)]">
+              <div className="flex justify-between items-center">
+                <div>
+                  <span className="text-[10px] uppercase font-black px-3 py-1 rounded-full bg-[#EAF5EC] text-[#266245] inline-block">
+                    Temporizador de Inmersión ⏱️
+                  </span>
+                  <div className="text-base font-black text-[#3D352E] mt-1">Bloque de Estudio Focalizado</div>
+                </div>
+                <div className="text-3xl font-black font-mono text-[#FF85A1] bg-[#F3ECE1] rounded-[20px] px-5 py-2 shadow-inner">
+                  {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                {[15, 20, 25].map(mins => (
+                  <button
+                    key={mins}
+                    onClick={() => {
+                      playPopSound();
+                      setPomoMinutes(mins);
+                      setTimeLeft(mins * 60);
+                      setIsRunning(false);
+                    }}
+                    className={`py-2.5 rounded-[18px] text-xs font-black transition-all ${
+                      pomoMinutes === mins ? 'bg-[#FFD6DE] text-[#A84A60]' : 'bg-white text-[#695F56] border'
+                    }`}
+                  >
+                    🌸 {mins} Minutos
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    playPopSound();
+                    setIsRunning(!isRunning);
+                  }}
+                  className={`flex-1 py-3.5 rounded-[20px] text-xs font-black text-white transition-all ${
+                    isRunning ? 'bg-[#FF85A1]' : 'bg-[#52B788]'
+                  }`}
+                >
+                  {isRunning ? '⏸️ Pausar Bloque' : '▶️ Iniciar Estudio (+XP)'}
+                </button>
+                <button
+                  onClick={() => {
+                    playPopSound();
+                    setIsRunning(false);
+                    setTimeLeft(pomoMinutes * 60);
+                  }}
+                  className="px-5 py-3.5 rounded-[20px] text-xs font-black bg-white text-[#695F56] border"
+                >
+                  ↺ Reiniciar
+                </button>
+              </div>
+            </div>
+
+            {/* MÉTRICAS */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+              {[
+                { label: 'Puntos XP', val: `${xp}`, sub: 'Nivel Explorer', icon: '⭐', bg: 'bg-[#FFF1C5]' },
+                { label: 'Racha Diaria', val: `${streak} Días`, sub: 'Activa hoy', icon: '🔥', bg: 'bg-[#FFD6DE]' },
+                { label: 'Minutos Totales', val: `${totalMinutes}m`, sub: `${(totalMinutes / 60).toFixed(1)}h acumuladas`, icon: '⏱️', bg: 'bg-[#D4EBF8]' },
+                { label: 'Tarjetas Dominadas', val: `${cardsMastered}`, sub: 'Flashcards listas', icon: '🧠', bg: 'bg-[#D9EBD9]' }
+              ].map((m, idx) => (
+                <div key={idx} className="bg-white rounded-[24px] p-4 flex flex-col justify-between h-32 shadow-[6px_8px_18px_rgba(210,190,175,0.18)] border border-[#F3ECE1]">
+                  <div className={`w-9 h-9 rounded-[16px] ${m.bg} flex items-center justify-center text-lg`}>
+                    {m.icon}
+                  </div>
+                  <div>
+                    <div className="text-[10px] font-black text-[#8C7E72]">{m.label}</div>
+                    <div className="text-xl font-black text-[#3D352E] mt-0.5">{m.val}</div>
+                    <div className="text-[9px] font-bold text-[#A89066]">{m.sub}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* ACTIVIDAD SEMANAL */}
+            <div className="bg-white rounded-[26px] p-5 shadow-[6px_8px_18px_rgba(210,190,175,0.18)] border border-[#F3ECE1] space-y-3">
+              <div className="text-xs font-black text-[#3D352E]">Racha Semanal de Aprendizaje</div>
+              <div className="grid grid-cols-7 gap-2">
+                {daysOfWeek.map((day, i) => (
+                  <div
+                    key={i}
+                    onClick={() => {
+                      playPopSound();
+                      const updated = [...weeklyActive];
+                      updated[i] = !updated[i];
+                      setWeeklyActive(updated);
+                    }}
+                    className={`py-3 rounded-[18px] text-center cursor-pointer transition-all ${
+                      weeklyActive[i] ? 'bg-[#D9EBD9] text-[#1E523A] font-black scale-105 shadow-sm' : 'bg-[#FAF6F0] text-[#A3978C] font-semibold'
+                    }`}
+                  >
+                    <div className="text-[10px]">{day}</div>
+                    <div className="text-xs mt-1">{weeklyActive[i] ? '✓' : '•'}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 2. FLASHCARDS INTERACTIVAS */}
+        {activeTab === 'flashcards' && (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-2xl font-black text-[#3D352E] tracking-tight flex items-center gap-2">
+                Flashcards de Repaso Activo <span>🗂️</span>
+              </h2>
+              <p className="text-[#7A6E63] text-xs mt-1">
+                Toca la tarjeta para girarla. Repasa frases del Bono 5, verbos clave y falsos amigos.
+              </p>
+            </div>
+
+            <div
+              onClick={() => {
+                playPopSound();
+                setIsFlipped(!isFlipped);
+              }}
+              className="bg-white rounded-[32px] p-10 sm:p-14 text-center cursor-pointer hover:scale-[1.01] transition-all min-h-[260px] flex flex-col items-center justify-center space-y-4 shadow-[8px_12px_26px_rgba(210,190,175,0.25)] border border-[#F3ECE1] relative"
+            >
+              <span className="text-[11px] font-black uppercase px-4 py-1 rounded-full bg-[#FFD6DE] text-[#A84A60]">
+                {flashcardsData[cardIndex].cat}
+              </span>
+
+              <div className="text-xl sm:text-2xl font-black text-[#3D352E] max-w-xl leading-relaxed">
+                {isFlipped ? flashcardsData[cardIndex].back : flashcardsData[cardIndex].front}
+              </div>
+
+              <span className="text-[11px] text-[#A89066] font-bold">
+                {isFlipped ? '💡 Significado y fonética' : '👆 Toca la tarjeta para ver la respuesta'}
+              </span>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  playPopSound();
+                  setIsFlipped(false);
+                  setCardIndex(prev => (prev + 1) % flashcardsData.length);
+                }}
+                className="flex-1 py-3.5 rounded-[20px] bg-white text-[#695F56] font-black text-xs shadow-sm border hover:bg-[#FAF6F0]"
+              >
+                ➡️ Siguiente Tarjeta
+              </button>
+              <button
+                onClick={() => {
+                  playChimeSound();
+                  setCardsMastered(prev => prev + 1);
+                  setXp(prev => prev + 15);
+                  setIsFlipped(false);
+                  setCardIndex(prev => (prev + 1) % flashcardsData.length);
+                  showSaveNotice('🎉 ¡Tarjeta dominada! +15 XP');
+                }}
+                className="flex-1 py-3.5 rounded-[20px] bg-[#D9EBD9] text-[#1E523A] font-black text-xs shadow-sm hover:brightness-105"
+              >
+                ✅ ¡Me la sé! (+15 XP)
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* 3. QUIZZES & DIAGNÓSTICO INTERACTIVO */}
+        {activeTab === 'quizzes' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-black text-[#3D352E] tracking-tight flex items-center gap-2">
+                  Quizzes & Desafío Rápido <span>🎯</span>
+                </h2>
+                <p className="text-[#7A6E63] text-xs mt-1">
+                  Pon a prueba tu oído, frases clave y gramática práctica.
+                </p>
+              </div>
+
+              <span className="text-xs font-black px-3.5 py-1.5 rounded-full bg-[#FFF1C5] text-[#8C6200] shadow-sm">
+                Aciertos: {quizScore}
+              </span>
+            </div>
+
+            <div className="bg-white rounded-[28px] p-7 shadow-[8px_10px_22px_rgba(210,190,175,0.22)] border border-[#F3ECE1] space-y-5">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-black uppercase px-3 py-1 rounded-full bg-[#E3EFEA] text-[#245445]">
+                  Pregunta {quizIdx + 1} de {quizQuestions.length}
+                </span>
+                <button
+                  onClick={() => speakEnglish(quizQuestions[quizIdx].q)}
+                  className="w-8 h-8 rounded-full bg-[#FAF6F0] hover:bg-[#FFD6DE] text-xs flex items-center justify-center"
+                >
+                  🔊
+                </button>
+              </div>
+
+              <h3 className="text-base font-black text-[#3D352E] leading-snug">
+                {quizQuestions[quizIdx].q}
+              </h3>
+
+              <div className="space-y-2.5">
+                {quizQuestions[quizIdx].options.map((opt, oIdx) => {
+                  let btnBg = 'bg-[#FAF6F0] text-[#4A4139] border border-[#F3ECE1]';
+                  if (selectedOption !== null) {
+                    if (oIdx === quizQuestions[quizIdx].correct) {
+                      btnBg = 'bg-[#D9EBD9] text-[#1E523A] border-2 border-[#52B788] font-black';
+                    } else if (selectedOption === oIdx) {
+                      btnBg = 'bg-[#FFD6DE] text-[#A84A60] border-2 border-[#FFAAA6] font-black';
+                    }
+                  }
+
+                  return (
+                    <button
+                      key={oIdx}
+                      disabled={selectedOption !== null}
+                      onClick={() => {
+                        setSelectedOption(oIdx);
+                        if (oIdx === quizQuestions[quizIdx].correct) {
+                          playChimeSound();
+                          setQuizScore(prev => prev + 1);
+                          setXp(prev => prev + 20);
+                          setQuizFeedback('🎉 ¡Correcto! ' + quizQuestions[quizIdx].explain);
+                        } else {
+                          playPopSound();
+                          setQuizFeedback('❌ Incorrecto. ' + quizQuestions[quizIdx].explain);
+                        }
+                      }}
+                      className={`w-full text-left p-4 rounded-[20px] text-xs font-semibold transition-all ${btnBg}`}
+                    >
+                      {opt}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {quizFeedback && (
+                <div className="p-4 rounded-[18px] bg-[#FAF6F0] text-xs font-bold text-[#5C524A] leading-relaxed border">
+                  {quizFeedback}
+                </div>
+              )}
+
+              {selectedOption !== null && (
+                <button
+                  onClick={() => {
+                    playPopSound();
+                    setSelectedOption(null);
+                    setQuizFeedback(null);
+                    setQuizIdx(prev => (prev + 1) % quizQuestions.length);
+                  }}
+                  className="w-full py-3.5 rounded-[20px] bg-gradient-to-r from-[#FFAAA6] to-[#FF85A1] text-white font-black text-xs shadow-sm hover:brightness-105"
+                >
+                  Siguiente Pregunta ➔
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* 4. VERBOS ESENCIALES */}
         {activeTab === 'verbos' && (
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <h1 className="text-2xl font-black text-[#3D352E] tracking-tight flex items-center gap-2">
+                <h2 className="text-2xl font-black text-[#3D352E] tracking-tight flex items-center gap-2">
                   Verbos Esenciales de Alta Frecuencia <span>⚡</span>
-                </h1>
+                </h2>
                 <p className="text-[#7A6E63] text-xs mt-1">
                   Consulta Presente, Pasado, Futuro y Participio con pronunciación fonética y voz nativa.
                 </p>
@@ -434,14 +928,14 @@ export default function EnglishMasteryHome() {
           </div>
         )}
 
-        {/* 2. 100 FRASES DEL BONO 5 */}
+        {/* 5. 100 FRASES DEL BONO 5 */}
         {activeTab === 'frases' && (
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <h1 className="text-2xl font-black text-[#3D352E] tracking-tight flex items-center gap-2">
+                <h2 className="text-2xl font-black text-[#3D352E] tracking-tight flex items-center gap-2">
                   100 Frases Clave para Hablar con Seguridad <span>💬</span>
-                </h1>
+                </h2>
                 <p className="text-[#7A6E63] text-xs mt-1">
                   Organizadas en 10 situaciones del Bono 5 con pronunciación escrita y audio nativo.
                 </p>
@@ -510,14 +1004,14 @@ export default function EnglishMasteryHome() {
           </div>
         )}
 
-        {/* 3. VOCABULARIO (200 SUSTANTIVOS & 500 PALABRAS) */}
+        {/* 6. VOCABULARIO (200 SUSTANTIVOS & 500 PALABRAS) */}
         {activeTab === 'vocabulario' && (
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <h1 className="text-2xl font-black text-[#3D352E] tracking-tight flex items-center gap-2">
+                <h2 className="text-2xl font-black text-[#3D352E] tracking-tight flex items-center gap-2">
                   Vocabulario Esencial (PDFs de Apoyo) <span>📖</span>
-                </h1>
+                </h2>
                 <p className="text-[#7A6E63] text-xs mt-1">200 sustantivos categorizados y falsos amigos.</p>
               </div>
 
@@ -579,13 +1073,13 @@ export default function EnglishMasteryHome() {
           </div>
         )}
 
-        {/* 4. HUB DE PLATAFORMAS (14 PLATAFORMAS) */}
+        {/* 7. HUB DE PLATAFORMAS (14 PLATAFORMAS) */}
         {activeTab === 'hub' && (
           <div className="space-y-6">
             <div>
-              <h1 className="text-2xl font-black text-[#3D352E] tracking-tight flex items-center gap-2">
+              <h2 className="text-2xl font-black text-[#3D352E] tracking-tight flex items-center gap-2">
                 Hub de Plataformas & Recursos Recomendados <span>🌐</span>
-              </h1>
+              </h2>
               <p className="text-[#7A6E63] text-xs mt-1">
                 Tus 14 plataformas gratuitas para entrenar vocabulario, listening, gramática y juegos interactivos.
               </p>
@@ -618,81 +1112,19 @@ export default function EnglishMasteryHome() {
           </div>
         )}
 
-        {/* 5. DASHBOARD & FOCUS */}
-        {activeTab === 'pomodoro' && (
-          <div className="space-y-6">
-            <div className="bg-white rounded-[28px] p-6 space-y-4 shadow-[8px_10px_22px_rgba(210,190,175,0.22)]">
-              <div className="flex justify-between items-center">
-                <div>
-                  <span className="text-[10px] uppercase font-black px-3 py-1 rounded-full bg-[#EAF5EC] text-[#266245] inline-block">
-                    Temporizador de Inmersión ⏱️
-                  </span>
-                  <div className="text-base font-black text-[#3D352E] mt-1">Bloque de Estudio Focalizado</div>
-                </div>
-                <div className="text-3xl font-black font-mono text-[#FF85A1] bg-[#F3ECE1] rounded-[20px] px-5 py-2 shadow-inner">
-                  {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-3">
-                {[15, 20, 25].map(mins => (
-                  <button
-                    key={mins}
-                    onClick={() => {
-                      playPopSound();
-                      setPomoMinutes(mins);
-                      setTimeLeft(mins * 60);
-                      setIsRunning(false);
-                    }}
-                    className={`py-2.5 rounded-[18px] text-xs font-black transition-all ${
-                      pomoMinutes === mins ? 'bg-[#FFD6DE] text-[#A84A60]' : 'bg-white text-[#695F56] border'
-                    }`}
-                  >
-                    🌸 {mins} Minutos
-                  </button>
-                ))}
-              </div>
-
-              <div className="flex gap-3">
-                <button
-                  onClick={() => {
-                    playPopSound();
-                    setIsRunning(!isRunning);
-                  }}
-                  className={`flex-1 py-3.5 rounded-[20px] text-xs font-black text-white transition-all ${
-                    isRunning ? 'bg-[#FF85A1]' : 'bg-[#52B788]'
-                  }`}
-                >
-                  {isRunning ? '⏸️ Pausar Bloque' : '▶️ Iniciar Estudio (+XP)'}
-                </button>
-                <button
-                  onClick={() => {
-                    playPopSound();
-                    setIsRunning(false);
-                    setTimeLeft(pomoMinutes * 60);
-                  }}
-                  className="px-5 py-3.5 rounded-[20px] text-xs font-black bg-white text-[#695F56] border"
-                >
-                  ↺ Reiniciar
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* 6. CURSOS */}
+        {/* 8. BIBLIOTECA DE CURSOS */}
         {activeTab === 'cursos' && (
           <div className="space-y-6">
             <div>
-              <h1 className="text-2xl font-black text-[#3D352E] tracking-tight flex items-center gap-2">
+              <h2 className="text-2xl font-black text-[#3D352E] tracking-tight flex items-center gap-2">
                 Biblioteca de Cursos <span>📚</span>
-              </h1>
+              </h2>
               <p className="text-[#7A6E63] text-xs mt-1">Accesos directos a tus programas oficiales.</p>
             </div>
 
             <div className="bg-white rounded-[28px] p-5 space-y-3 border-2 border-[#FFE4B5] shadow-sm">
               <span className="text-[10px] uppercase font-black px-3 py-1 rounded-full bg-[#FFF1C5] text-[#8C6200]">Inglés Práctico</span>
-              <h2 className="text-base font-black text-[#3D352E]">App & Biblioteca Oficial</h2>
+              <h3 className="text-base font-black text-[#3D352E]">App & Biblioteca Oficial</h3>
               <p className="text-xs text-[#6B5E55]">Portal de clases, asistente con IA y materiales descargables.</p>
               <a href="https://app.inglespractico.info" target="_blank" rel="noopener noreferrer" className="inline-block px-4 py-2 rounded-[16px] bg-[#FFAAA6] text-white font-black text-xs">
                 Abrir Portal ↗
@@ -701,7 +1133,7 @@ export default function EnglishMasteryHome() {
 
             <div className="bg-white rounded-[28px] p-5 space-y-3 border-2 border-[#BAE6FD] shadow-sm">
               <span className="text-[10px] uppercase font-black px-3 py-1 rounded-full bg-[#D4EBF8] text-[#0369A1]">Hotmart Club</span>
-              <h2 className="text-base font-black text-[#3D352E]">Gringo Academy & Activación Neural</h2>
+              <h3 className="text-base font-black text-[#3D352E]">Gringo Academy & Activación Neural</h3>
               <p className="text-xs text-[#6B5E55]">Telenovelas, lecciones auditivas y reprogramación subconsciente.</p>
               <a href="https://consumer.hotmart.com" target="_blank" rel="noopener noreferrer" className="inline-block px-4 py-2 rounded-[16px] bg-[#38BDF8] text-white font-black text-xs">
                 Abrir Hotmart ↗
