@@ -42,8 +42,6 @@ def procesar():
             "will_he": str(r.get("Fut_Will_He_She_It", "")).strip(),
             "will_they": str(r.get("Fut_Will_They", "")).strip(),
             "going": str(r.get("Fut_Going_I", "")).strip(),
-            "going_he": str(r.get("Fut_Going_He_She_It", "")).strip(),
-            "going_they": str(r.get("Fut_Going_You_We_They", "")).strip(),
             "exPres": str(r.get("Ejemplo_Presente", "")).strip(),
             "exPast": str(r.get("Ejemplo_Pasado", "")).strip(),
             "exFut": str(r.get("Ejemplo_Futuro", "")).strip()
@@ -68,7 +66,7 @@ def procesar():
         json.dump(verbs_clean, f, ensure_ascii=False)
     with open("public/data/words.json", "w", encoding="utf-8") as f:
         json.dump(words_clean, f, ensure_ascii=False)
-    print("✅ ¡Archivos generados en public/data/verbs.json y public/data/words.json con éxito!")
+    print("✅ ¡Archivos generados con éxito!")
 
 if __name__ == "__main__":
     procesar()

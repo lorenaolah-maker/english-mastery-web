@@ -31,8 +31,6 @@ interface VerbItemFull {
   will_he?: string;
   will_they?: string;
   going?: string;
-  going_he?: string;
-  going_they?: string;
   exPres?: string;
   exPast?: string;
   exFut?: string;
@@ -49,10 +47,124 @@ interface WordItemFull {
   theme: string;
 }
 
-export default function Home() {
-  const [activeTab, setActiveTab] = useState('mision'); // Modo Duolingo por defecto
+const phrasalVerbsData = [
+  {
+    particle: 'UP',
+    arrow: '↑',
+    meaning: 'Hacia arriba · Completar al 100% · Aparecer',
+    color: 'bg-[#FFD6DE] text-[#A84A60] border-[#FFAAA6]',
+    verbs: [
+      { phrasal: 'Wake up', es: 'Despertarse', ex: 'I woke up at 7:00 AM.' },
+      { phrasal: 'Get up', es: 'Levantarse de la cama', ex: 'Get up, it is late!' },
+      { phrasal: 'Grow up', es: 'Crecer hasta ser adulto', ex: 'I grew up in Salto.' },
+      { phrasal: 'Show up', es: 'Aparecer / Presentarse', ex: "He didn't show up to class." },
+      { phrasal: 'Give up', es: 'Rendirse / Abandonar', ex: "Never give up on your goals!" },
+      { phrasal: 'Pick up', es: 'Recoger / Pasar a buscar', ex: 'Can you pick me up at 8:00?' }
+    ]
+  },
+  {
+    particle: 'OUT',
+    arrow: '➔',
+    meaning: 'Hacia afuera · Descubrir · Hasta agotarse',
+    color: 'bg-[#D4EBF8] text-[#0369A1] border-[#7DD3FC]',
+    verbs: [
+      { phrasal: 'Find out', es: 'Enterarse de una información', ex: 'I found out the truth yesterday.' },
+      { phrasal: 'Figure out', es: 'Resolver / Darse cuenta', ex: 'I cannot figure it out.' },
+      { phrasal: 'Run out (of)', es: 'Quedarse sin nada', ex: 'We ran out of coffee!' },
+      { phrasal: 'Work out', es: 'Entrenar / Resultar bien', ex: 'Everything worked out fine.' },
+      { phrasal: 'Hang out', es: 'Pasar el rato / Salir con amigos', ex: 'Let us hang out this weekend.' },
+      { phrasal: 'Check out', es: 'Mirar / Salir del hotel', ex: 'Check out this new place.' }
+    ]
+  },
+  {
+    particle: 'ON',
+    arrow: '➔',
+    meaning: 'Continuar · Colocar encima · Encender',
+    color: 'bg-[#D9EBD9] text-[#1E523A] border-[#86EFAC]',
+    verbs: [
+      { phrasal: 'Go on', es: 'Seguir / Continuar hablando', ex: 'Go on, I am listening.' },
+      { phrasal: 'Carry on', es: 'Continuar adelante', ex: 'Carry on with your study.' },
+      { phrasal: 'Put on', es: 'Ponerse ropa o accesorios', ex: 'Put on your warm coat.' },
+      { phrasal: 'Turn on', es: 'Encender (luces, aparatos)', ex: 'Turn on the living room light.' },
+      { phrasal: 'Get on', es: 'Subirse a transporte grande / Llevarse bien', ex: 'Get on the train.' },
+      { phrasal: 'Hold on', es: 'Esperar / Aguantar un segundo', ex: 'Hold on a second, please.' }
+    ]
+  },
+  {
+    particle: 'OFF',
+    arrow: '↘',
+    meaning: 'Separar · Cortar contacto · Salir',
+    color: 'bg-[#FFE4E6] text-[#E11D48] border-[#FDA4AF]',
+    verbs: [
+      { phrasal: 'Turn off', es: 'Apagar luces o aparatos', ex: 'Turn off your phone before bed.' },
+      { phrasal: 'Take off', es: 'Despegar el avión / Quitarse ropa', ex: 'The plane took off on time.' },
+      { phrasal: 'Get off', es: 'Bajarse del transporte', ex: 'Get off at the next bus station.' },
+      { phrasal: 'Call off', es: 'Cancelar un evento agendado', ex: 'They called off the meeting.' },
+      { phrasal: 'Put off', es: 'Posponer / Dejar para después', ex: 'Do not put it off until tomorrow.' },
+      { phrasal: 'Show off', es: 'Presumir / Alardear', ex: 'Stop showing off your new car.' }
+    ]
+  },
+  {
+    particle: 'DOWN',
+    arrow: '↓',
+    meaning: 'Hacia abajo · Reducir · Anotar en papel',
+    color: 'bg-[#F3E8FF] text-[#6B21A8] border-[#D8B4FE]',
+    verbs: [
+      { phrasal: 'Calm down', es: 'Calmarse / Tranquilizarse', ex: 'Calm down, everything is alright.' },
+      { phrasal: 'Slow down', es: 'Ir más despacio / Reducir velocidad', ex: 'Slow down, there is traffic ahead.' },
+      { phrasal: 'Break down', es: 'Descomponerse una máquina / Quebrarse', ex: 'My car broke down on the road.' },
+      { phrasal: 'Write down', es: 'Anotar en papel o libreta', ex: 'Write it down.' },
+      { phrasal: 'Turn down', es: 'Bajar volumen / Rechazar oferta', ex: 'She turned down the job offer.' },
+      { phrasal: 'Let down', es: 'Decepcionar a alguien', ex: 'I will not let you down.' }
+    ]
+  },
+  {
+    particle: 'BACK',
+    arrow: '⮌',
+    meaning: 'Volver al punto de origen · Devolver',
+    color: 'bg-[#FEF3C7] text-[#92400E] border-[#FDE68A]',
+    verbs: [
+      { phrasal: 'Come back', es: 'Volver a este lugar', ex: 'Come back home soon.' },
+      { phrasal: 'Go back', es: 'Regresar allá', ex: 'I want to go back to Europe.' },
+      { phrasal: 'Call back', es: 'Devolver la llamada', ex: 'I will call you back in five minutes.' },
+      { phrasal: 'Give back', es: 'Devolver un objeto prestado', ex: 'Give it back to your sister.' },
+      { phrasal: 'Pay back', es: 'Devolver dinero prestado', ex: 'I will pay you back tomorrow.' },
+      { phrasal: 'Look back', es: 'Mirar hacia el pasado', ex: 'Do not look back with regret.' }
+    ]
+  },
+  {
+    particle: 'OVER',
+    arrow: '↷',
+    meaning: 'De nuevo · Repasar · Pasar por encima (Superar)',
+    color: 'bg-[#FEE2E2] text-[#991B1B] border-[#FECACA]',
+    verbs: [
+      { phrasal: 'Get over', es: 'Superar algo difícil o una ruptura', ex: 'It took months to get over the flu.' },
+      { phrasal: 'Go over', es: 'Repasar / Revisar a detalle', ex: 'Let us go over the daily lesson.' },
+      { phrasal: 'Think over', es: 'Pensarlo bien antes de decidir', ex: 'Take your time and think it over.' },
+      { phrasal: 'Take over', es: 'Tomar el control de algo', ex: 'She took over the family salon.' },
+      { phrasal: 'Start over', es: 'Empezar desde cero de nuevo', ex: 'Let us start over with fresh energy.' },
+      { phrasal: 'Hand over', es: 'Entregar en mano', ex: 'Hand over your ticket, please.' }
+    ]
+  },
+  {
+    particle: 'AWAY',
+    arrow: '⇢',
+    meaning: 'Alejarse · Desaparecer · Guardar en su sitio',
+    color: 'bg-[#CCFBF1] text-[#115E59] border-[#99F6E4]',
+    verbs: [
+      { phrasal: 'Go away', es: 'Irse lejos / Marcharse', ex: 'Please go away, I need to focus.' },
+      { phrasal: 'Throw away', es: 'Tirar a la basura', ex: 'Throw away the expired milk.' },
+      { phrasal: 'Put away', es: 'Guardar cada cosa en su lugar', ex: 'Put away your iPad when finished.' },
+      { phrasal: 'Give away', es: 'Regalar algo que no usas', ex: 'She gave away her old books.' },
+      { phrasal: 'Run away', es: 'Escaparse corriendo', ex: 'The little dog ran away.' },
+      { phrasal: 'Take away', es: 'Comida para llevar', ex: 'Two coffees to take away, please.' }
+    ]
+  }
+];
 
-  // Métricas
+export default function Home() {
+  const [activeTab, setActiveTab] = useState('mision');
+
   const [xp, setXp] = useState(0);
   const [streak, setStreak] = useState(1);
   const [totalMinutes, setTotalMinutes] = useState(0);
@@ -61,66 +173,42 @@ export default function Home() {
   const [currentDay, setCurrentDay] = useState(1);
   const [showConjugation, setShowConjugation] = useState<number | null>(null);
 
-  // Registro semanal
   const [weeklyActive, setWeeklyActive] = useState<boolean[]>([true, false, false, false, false, false, false]);
 
-  // Quests
-  const [questPomo, setQuestPomo] = useState(false);
-  const [questCards, setQuestCards] = useState(false);
-  const [questListening, setQuestListening] = useState(false);
-  const [questClaimed, setQuestClaimed] = useState(false);
-
-  // Bases de datos JSON
   const [allVerbs, setAllVerbs] = useState<VerbItemFull[]>([]);
   const [allWords, setAllWords] = useState<WordItemFull[]>([]);
 
-  // Mini-Juego de Parejas
   const [gameCards, setGameCards] = useState<{ id: string; text: string; matchId: string; isMatched: boolean }[]>([]);
   const [selectedCards, setSelectedCards] = useState<number[]>([]);
   const [gameWon, setGameWon] = useState(false);
 
-  // Focus Audio
+  const [selectedParticle, setSelectedParticle] = useState('UP');
+
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const sfxCtxRef = useRef<AudioContext | null>(null);
 
-  // Temporizador Pomodoro
   const [pomoMinutes, setPomoMinutes] = useState(15);
   const [timeLeft, setTimeLeft] = useState(15 * 60);
   const [isRunning, setIsRunning] = useState(false);
   const [savedNotice, setSavedNotice] = useState<string | null>(null);
 
-  // Buscadores
   const [verbSearch, setVerbSearch] = useState('');
   const [verbFilter, setVerbFilter] = useState('TODOS');
   const [vocabTab, setVocabTab] = useState('200_SUSTANTIVOS');
   const [vocabSearch, setVocabSearch] = useState('');
-  const [selectedSituation, setSelectedSituation] = useState('TODAS');
 
-  // Writing Clinic
   const [writingType, setWritingType] = useState('Diario personal / Reflexion del dia');
   const [writingText, setWritingText] = useState('');
   const [writingFeedback, setWritingFeedback] = useState<string | null>(null);
   const [isWritingAnalyzing, setIsWritingAnalyzing] = useState(false);
 
-  // Cursos & Hitos
-  const [selectedMilestone, setSelectedMilestone] = useState('A0');
   const [ipWeek, setIpWeek] = useState(1);
   const [gringoUnit, setGringoUnit] = useState(1);
   const [neuralWeek, setNeuralWeek] = useState(1);
 
-  // Frase inspiracional
-  const [quoteIdx, setQuoteIdx] = useState(0);
-  const quotes = [
-    { en: 'Small daily steps every day lead to big changes.', es: 'Pequeños pasos diarios conducen a grandes cambios.' },
-    { en: 'Fluency is consistency in action, not overnight magic.', es: 'La fluidez es constancia en acción, no magia de la noche a la mañana.' },
-    { en: 'Focus for twenty quiet minutes, and let time do the rest.', es: 'Concéntrate veinte minutos en calma y deja que el tiempo haga el resto.' },
-    { en: 'Your dedication today opens global doors tomorrow.', es: 'Tu dedicación de hoy abre puertas globales mañana.' }
-  ];
-
-  // Planta Viva
   const plantData = [
-    { icon: '🌱', name: 'Semillita Brotando', desc: 'Regada con tus primeros minutos de inmersión auditiva.' },
+    { icon: '🌱', name: 'Semillita Brotando', desc: 'Regada con tus primeros minutos de inmersión.' },
     { icon: '🌿', name: 'Brote Fuerte', desc: 'Creciendo con consistencia y práctica diaria.' },
     { icon: '🪴', name: 'Planta de Focus', desc: 'Llena de energía por tu concentración.' },
     { icon: '🌸', name: 'Flor Florecida', desc: 'Tu vocabulario florece con cada sesión.' },
@@ -208,7 +296,6 @@ export default function Home() {
     }
   };
 
-  // Cargar datos JSON
   useEffect(() => {
     fetch('/data/verbs.json')
       .then(res => res.json())
@@ -221,7 +308,6 @@ export default function Home() {
       .catch(() => {});
   }, []);
 
-  // Cargar localStorage
   useEffect(() => {
     const sXp = localStorage.getItem('em_xp');
     const sMins = localStorage.getItem('em_mins');
@@ -229,10 +315,6 @@ export default function Home() {
     const sWater = localStorage.getItem('em_water');
     const sPlant = localStorage.getItem('em_plant');
     const sDay = localStorage.getItem('em_day');
-    const sQP = localStorage.getItem('em_qp');
-    const sQC = localStorage.getItem('em_qc');
-    const sQL = localStorage.getItem('em_ql');
-    const sClaimed = localStorage.getItem('em_claimed');
     const sWeek = localStorage.getItem('em_week');
 
     if (sXp) setXp(Number(sXp));
@@ -241,16 +323,11 @@ export default function Home() {
     if (sWater) setWaterDrops(Number(sWater));
     if (sPlant) setPlantStage(Number(sPlant));
     if (sDay) setCurrentDay(Number(sDay));
-    if (sQP === 'true') setQuestPomo(true);
-    if (sQC === 'true') setQuestCards(true);
-    if (sQL === 'true') setQuestListening(true);
-    if (sClaimed === 'true') setQuestClaimed(true);
     if (sWeek !== null) {
       try { setWeeklyActive(JSON.parse(sWeek)); } catch {}
     }
   }, []);
 
-  // Guardar localStorage
   useEffect(() => {
     localStorage.setItem('em_xp', xp.toString());
     localStorage.setItem('em_mins', totalMinutes.toString());
@@ -258,14 +335,9 @@ export default function Home() {
     localStorage.setItem('em_water', waterDrops.toString());
     localStorage.setItem('em_plant', plantStage.toString());
     localStorage.setItem('em_day', currentDay.toString());
-    localStorage.setItem('em_qp', questPomo.toString());
-    localStorage.setItem('em_qc', questCards.toString());
-    localStorage.setItem('em_ql', questListening.toString());
-    localStorage.setItem('em_claimed', questClaimed.toString());
     localStorage.setItem('em_week', JSON.stringify(weeklyActive));
-  }, [xp, totalMinutes, streak, waterDrops, plantStage, currentDay, questPomo, questCards, questListening, questClaimed, weeklyActive]);
+  }, [xp, totalMinutes, streak, waterDrops, plantStage, currentDay, weeklyActive]);
 
-  // Pomodoro
   useEffect(() => {
     let timer: NodeJS.Timeout;
     if (isRunning && timeLeft > 0) {
@@ -276,7 +348,6 @@ export default function Home() {
       setXp(prev => prev + earnedXp);
       setTotalMinutes(prev => prev + pomoMinutes);
       setWaterDrops(prev => prev + 2);
-      setQuestPomo(true);
       playChimeSound();
       showSaveNotice(`¡Sesión de ${pomoMinutes}m completada! +${earnedXp} XP`);
     }
@@ -299,7 +370,7 @@ export default function Home() {
       showSaveNotice('¡Regaste tu planta! +25 XP');
     } else {
       playPopSound();
-      showSaveNotice('Necesitas gotitas de agua. Completa un Pomodoro para ganar más.');
+      showSaveNotice('Necesitas gotitas de agua. Completa un bloque de Focus para ganar más.');
     }
   };
 
@@ -364,7 +435,6 @@ export default function Home() {
     }, 1200);
   };
 
-  // 3 Verbos del Día
   const currentDayVerbs: VerbItemFull[] = allVerbs.length > 0
     ? allVerbs.filter(v => v.day === currentDay).slice(0, 3)
     : [
@@ -373,7 +443,6 @@ export default function Home() {
         { id: 3, day: 1, base: "do", es: "hacer", type: "Irregular", pron: "dúu", past: "did", participle: "done", pres_i: "I do", pres_you: "You do", pres_he: "He/She/It does", pres_we: "We do", pres_they: "They do", pas_i: "I did", pas_you: "You did", pas_he: "He/She/It did", pas_we: "We did", pas_they: "They did", will: "I will do", will_he: "He will do", will_they: "They will do", going: "I am going to do", exPres: "I do my best.", exPast: "Yesterday I did it.", exFut: "Tomorrow I will do that." }
       ];
 
-  // 7 Palabras del Día
   const currentDayWords: WordItemFull[] = allWords.length > 0
     ? allWords.filter(w => w.day === currentDay).slice(0, 7)
     : [
@@ -386,7 +455,6 @@ export default function Home() {
         { id: 7, day: 1, word: "those", ipa: "/ðoʊz/", pron: "dhóuz", cat: "pronombre", es: "esos / esas", theme: "Básicas" }
       ];
 
-  // Mini-Juego de Parejas
   const handleStartGame = () => {
     playPopSound();
     setGameWon(false);
@@ -442,7 +510,6 @@ export default function Home() {
 
   const daysOfWeek = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 
-  // 14 Plataformas con botones de colores individuales
   const platformsList = [
     { title: 'BaBaDum (1500 Palabras)', desc: 'Juega y aprende 1500 palabras con ilustraciones y 5 juegos interactivos rápidos.', link: 'https://babadum.com', btn: 'Jugar BaBaDum', icon: '🦅', bg: 'bg-[#FFF1C5]', btnBg: 'bg-[#EAB308] hover:bg-[#CA8A04] text-white' },
     { title: 'inglés.com (Diccionario Definitivo)', desc: 'Traductor, vocabulario, comparador de palabras y conjugador verbal completo.', link: 'https://www.ingles.com', btn: 'Abrir inglés.com', icon: '📖', bg: 'bg-[#D4EBF8]', btnBg: 'bg-[#0284C7] hover:bg-[#0369A1] text-white' },
@@ -462,7 +529,6 @@ export default function Home() {
 
   return (
     <div className="flex min-h-screen bg-[#FBF6EF] text-[#4A4139] font-sans antialiased selection:bg-[#FFD1DC]">
-      {/* BARRA LATERAL */}
       <aside className="w-80 shrink-0 bg-[#E3EFEA] p-5 flex flex-col justify-between border-r border-[#D3E3DD] shadow-[6px_0_24px_rgba(180,200,195,0.18)]">
         <div>
           <div className="bg-white rounded-[28px] p-3.5 mb-5 flex items-center gap-3 shadow-[8px_10px_22px_rgba(210,190,175,0.22)]">
@@ -489,14 +555,14 @@ export default function Home() {
           <nav className="space-y-1.5">
             {[
               { id: 'mision', label: 'Misión Diaria (3V + 7P)', icon: '⭐', badge: 'Duolingo Mode', bg: 'bg-[#FFF1C5]' },
-              { id: 'pomodoro', label: 'Dashboard & Focus', icon: '⏱️', badge: 'Focus', bg: 'bg-[#FFD6DE]' },
+              { id: 'phrasal', label: 'Phrasal Verbs (Flechas)', icon: '🏹', badge: 'Tomo 2', bg: 'bg-[#D9EBD9]' },
+              { id: 'guias_pdf', label: 'Biblioteca Dibujada', icon: '🎨', badge: 'PDFs 1, 2 y 3', bg: 'bg-[#FFD6DE]' },
+              { id: 'pomodoro', label: 'Dashboard & Focus', icon: '⏱️', badge: 'Focus & Planta', bg: 'bg-[#D4EBF8]' },
               { id: 'verbos', label: 'Buscador de Verbos', icon: '⚡', badge: '2,151 Verbos', bg: 'bg-[#FFF1C5]' },
-              { id: 'vocabulario', label: 'Vocabulario Esencial', icon: '📖', badge: '5,000 Palabras', bg: 'bg-[#D4EBF8]' },
+              { id: 'vocabulario', label: 'Vocabulario Esencial', icon: '📖', badge: '5,000 Palabras', bg: 'bg-[#D9EBD9]' },
               { id: 'hub', label: 'Hub de Plataformas', icon: '🌐', badge: '14 Sitios', bg: 'bg-[#E6DCF5]' },
               { id: 'cursos', label: 'Biblioteca de Cursos', icon: '📚', badge: '3 Cursos', bg: 'bg-[#FFF1C5]' },
-              { id: 'listening', label: 'Listening & Inmersión', icon: '🎧', badge: 'Audio', bg: 'bg-[#E6DCF5]' },
               { id: 'writing', label: 'Writing Clinic', icon: '✍️', badge: 'Notion', bg: 'bg-[#FFD6DE]' },
-              { id: 'milestones', label: 'Ruta de Hitos', icon: '🗺️', badge: 'A0-C2', bg: 'bg-[#FFF1C5]' },
             ].map(item => {
               const active = activeTab === item.id;
               return (
@@ -506,7 +572,7 @@ export default function Home() {
                     playPopSound();
                     setActiveTab(item.id);
                   }}
-                  className={`w-full flex items-center justify-between px-3.5 py-2 rounded-[22px] text-xs font-black transition-all ${
+                  className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-[22px] text-xs font-black transition-all ${
                     active
                       ? 'bg-white shadow-[5px_6px_16px_rgba(180,200,195,0.4)] text-[#3A322C] translate-x-1'
                       : 'text-[#48635B] hover:bg-white/50'
@@ -540,7 +606,6 @@ export default function Home() {
         </div>
       </aside>
 
-      {/* CONTENIDO PRINCIPAL */}
       <main className="flex-1 p-6 md:p-8 max-w-5xl mx-auto overflow-y-auto">
         {savedNotice && (
           <div className="fixed top-5 right-5 z-50 bg-[#D9EBD9] text-[#1B4332] font-black text-xs px-5 py-3.5 border-2 border-[#B7DDB7] rounded-[24px] shadow-xl animate-bounce flex items-center gap-2">
@@ -549,9 +614,7 @@ export default function Home() {
           </div>
         )}
 
-        {/* ========================================================= */}
-        {/* 1. MODO DUOLINGO: MISIÓN DIARIA (3 VERBOS CON CONJUGACIÓN COMPLETA + 7 PALABRAS) */}
-        {/* ========================================================= */}
+        {/* 1. MODO DUOLINGO: MISIÓN DIARIA */}
         {activeTab === 'mision' && (
           <div className="space-y-6">
             <div className="bg-gradient-to-r from-[#FFF4F6] via-[#FFF9F3] to-white rounded-[28px] p-6 border-2 border-[#FADCD5] shadow-[8px_10px_22px_rgba(210,190,175,0.22)] flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -570,7 +633,6 @@ export default function Home() {
                 </p>
               </div>
 
-              {/* Selector de día */}
               <div className="flex items-center gap-2">
                 <button
                   disabled={currentDay <= 1}
@@ -578,11 +640,11 @@ export default function Home() {
                     playPopSound();
                     setCurrentDay(prev => Math.max(prev - 1, 1));
                   }}
-                  className="w-10 h-10 rounded-[16px] bg-white border border-[#E8DFC8] font-black text-sm disabled:opacity-30"
+                  className="w-10 h-10 rounded-[16px] bg-white border border-[#E8DFC8] font-black text-sm disabled:opacity-30 shadow-sm"
                 >
                   ◀
                 </button>
-                <div className="bg-[#F3ECE1] px-4 py-2 rounded-[16px] text-xs font-black text-[#3D352E] text-center min-w-[90px]">
+                <div className="bg-[#F3ECE1] px-4 py-2 rounded-[16px] text-xs font-black text-[#3D352E] text-center min-w-[90px] shadow-inner">
                   Día {currentDay}
                 </div>
                 <button
@@ -591,14 +653,14 @@ export default function Home() {
                     playPopSound();
                     setCurrentDay(prev => prev + 1);
                   }}
-                  className="w-10 h-10 rounded-[16px] bg-white border border-[#E8DFC8] font-black text-sm disabled:opacity-30"
+                  className="w-10 h-10 rounded-[16px] bg-white border border-[#E8DFC8] font-black text-sm disabled:opacity-30 shadow-sm"
                 >
                   ▶
                 </button>
               </div>
             </div>
 
-            {/* SECCIÓN 1: LOS 3 VERBOS CON CONJUGACIÓN COMPLETA */}
+            {/* Los 3 Verbos del Día */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-black text-[#3D352E] flex items-center gap-2">
@@ -634,7 +696,6 @@ export default function Home() {
                         </div>
                       </div>
 
-                      {/* Tarjetas rápidas de los 3 tiempos */}
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
                         <div className="bg-[#FAF6F0] p-2.5 rounded-[16px]">
                           <div className="text-[10px] text-[#8C7E72] font-black uppercase">Presente</div>
@@ -663,22 +724,19 @@ export default function Home() {
                         </div>
                       </div>
 
-                      {/* Botón para desplegar conjugación completa con pronombres */}
                       <button
                         onClick={() => {
                           playPopSound();
                           setShowConjugation(isExpanded ? null : i);
                         }}
-                        className="w-full py-2 rounded-[14px] bg-[#F1F7F7] hover:bg-[#E3EFEA] text-[11px] font-black text-[#4E7267] flex items-center justify-center gap-1.5 transition-colors"
+                        className="w-full py-2.5 rounded-[16px] bg-[#F1F7F7] hover:bg-[#E3EFEA] text-[11px] font-black text-[#4E7267] flex items-center justify-center gap-1.5 transition-colors border border-[#D3E3DD]"
                       >
                         <span>📖</span> {isExpanded ? 'Ocultar conjugación completa' : 'Ver conjugación completa con todos los pronombres (I, You, He/She/It, We, They)'}
                       </button>
 
-                      {/* TABLA DE CONJUGACIÓN COMPLETA */}
                       {isExpanded && (
-                        <div className="p-4 rounded-[20px] bg-[#FBF6EF] border border-[#E8DFC8] space-y-3 animate-fadeIn text-xs">
+                        <div className="p-4 rounded-[20px] bg-[#FBF6EF] border border-[#E8DFC8] space-y-3 text-xs">
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                            {/* PRESENTE */}
                             <div className="bg-white p-3 rounded-[16px] shadow-sm space-y-1">
                               <span className="text-[10px] font-black uppercase text-[#8C7E72] block border-b pb-1">Presente Simple</span>
                               <div className="flex justify-between"><span>I:</span> <strong>{v.pres_i || `I ${v.base}`}</strong></div>
@@ -688,7 +746,6 @@ export default function Home() {
                               <div className="flex justify-between"><span>They:</span> <strong>{v.pres_they || `They ${v.base}`}</strong></div>
                             </div>
 
-                            {/* PASADO */}
                             <div className="bg-white p-3 rounded-[16px] shadow-sm space-y-1">
                               <span className="text-[10px] font-black uppercase text-[#0369A1] block border-b pb-1">Pasado Simple</span>
                               <div className="flex justify-between"><span>I:</span> <strong>{v.pas_i || `I ${v.past}`}</strong></div>
@@ -698,7 +755,6 @@ export default function Home() {
                               <div className="flex justify-between"><span>They:</span> <strong>{v.pas_they || `They ${v.past}`}</strong></div>
                             </div>
 
-                            {/* FUTURO */}
                             <div className="bg-white p-3 rounded-[16px] shadow-sm space-y-1">
                               <span className="text-[10px] font-black uppercase text-[#5B21B6] block border-b pb-1">Futuro (Will & Going)</span>
                               <div className="flex justify-between"><span>I will:</span> <strong>{v.will || `I will ${v.base}`}</strong></div>
@@ -724,7 +780,7 @@ export default function Home() {
               </div>
             </div>
 
-            {/* SECCIÓN 2: LAS 7 PALABRAS DEL DÍA */}
+            {/* Las 7 Palabras del Día */}
             <div className="space-y-3 pt-2">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-black text-[#3D352E] flex items-center gap-2">
@@ -758,7 +814,7 @@ export default function Home() {
               </div>
             </div>
 
-            {/* SECCIÓN 3: MINI-JUEGO DE EMPAREJAR (MEMORY MATCH) */}
+            {/* Mini-Juego de Parejas */}
             <div className="bg-white rounded-[28px] p-6 shadow-[8px_10px_22px_rgba(210,190,175,0.22)] border-2 border-[#D9EBD9] space-y-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -807,7 +863,7 @@ export default function Home() {
               )}
             </div>
 
-            {/* BOTÓN COMPLETAR DÍA */}
+            {/* Botón completar día */}
             <div className="pt-2">
               <button
                 onClick={() => {
@@ -827,7 +883,184 @@ export default function Home() {
         )}
 
         {/* ========================================================= */}
-        {/* 2. DASHBOARD & FOCUS (CON TU PLANTA 🌱 DE REGRESO) */}
+        {/* 2. NUEVO: PHRASAL VERBS POR FLECHAS (TOMO 2 DIBUJADO) */}
+        {/* ========================================================= */}
+        {activeTab === 'phrasal' && (
+          <div className="space-y-6">
+            <div>
+              <span className="text-[10px] font-black uppercase px-3 py-1 rounded-full bg-[#D9EBD9] text-[#1E523A]">
+                Guía Visual Tomo 2 · Phrasal Verbs Dibujados 🏹
+              </span>
+              <h1 className="text-2xl font-black text-[#3D352E] tracking-tight mt-1">
+                La Flecha de la Partícula
+              </h1>
+              <p className="text-xs text-[#7A6E63] mt-0.5">
+                No memorices listas infinitas: la partícula indica la dirección exacta de la acción.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
+              {phrasalVerbsData.map(p => (
+                <button
+                  key={p.particle}
+                  onClick={() => {
+                    playPopSound();
+                    setSelectedParticle(p.particle);
+                  }}
+                  className={`p-3 rounded-[18px] text-center font-black transition-all border ${
+                    selectedParticle === p.particle
+                      ? `${p.color} scale-105 shadow-md`
+                      : 'bg-white text-[#7A6E63] border-[#E8DFC8]'
+                  }`}
+                >
+                  <div className="text-base font-black">{p.arrow}</div>
+                  <div className="text-[11px] mt-0.5">{p.particle}</div>
+                </button>
+              ))}
+            </div>
+
+            {(() => {
+              const currentP = phrasalVerbsData.find(p => p.particle === selectedParticle) || phrasalVerbsData[0];
+              return (
+                <div className="bg-white rounded-[28px] p-6 shadow-[8px_10px_22px_rgba(210,190,175,0.22)] border border-[#F3ECE1] space-y-4">
+                  <div className="flex items-center gap-3">
+                    <span className="w-12 h-12 rounded-[20px] bg-[#FAF6F0] flex items-center justify-center text-2xl font-black border">
+                      {currentP.arrow}
+                    </span>
+                    <div>
+                      <h3 className="text-base font-black text-[#3D352E]">Partícula + {currentP.particle}</h3>
+                      <p className="text-xs font-bold text-[#A84A60]">{currentP.meaning}</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-2">
+                    {currentP.verbs.map((pv, idx) => (
+                      <div key={idx} className="p-4 rounded-[20px] bg-[#FAF6F0] border border-[#F3ECE1] space-y-1.5 flex flex-col justify-between">
+                        <div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-black text-[#3D352E]">{pv.phrasal}</span>
+                            <button
+                              onClick={() => speakEnglish(pv.phrasal)}
+                              className="w-7 h-7 rounded-full bg-white text-xs shadow-sm flex items-center justify-center"
+                            >
+                              🔊
+                            </button>
+                          </div>
+                          <div className="text-xs font-bold text-[#0369A1]">{pv.es}</div>
+                        </div>
+                        <div className="text-[11px] text-[#7A6E63] italic pt-1 border-t border-[#EADBCE]">
+                          &quot;{pv.ex}&quot;
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+        )}
+
+        {/* ========================================================= */}
+        {/* 3. NUEVO: BIBLIOTECA DE GUÍAS DIBUJADAS (TOMOS 1, 2 Y 3) */}
+        {/* ========================================================= */}
+        {activeTab === 'guias_pdf' && (
+          <div className="space-y-6">
+            <div>
+              <span className="text-[10px] font-black uppercase px-3 py-1 rounded-full bg-[#FFD6DE] text-[#A84A60]">
+                Material Visual Oficial Comprado 🎨
+              </span>
+              <h1 className="text-2xl font-black text-[#3D352E] tracking-tight mt-1">
+                Tus 3 Guías Visuales de Inglés Práctico
+              </h1>
+              <p className="text-xs text-[#7A6E63] mt-0.5">
+                Ábrelas directo en tu navegador o expórtalas a Goodnotes para rayar los ejercicios con tu Apple Pencil.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="bg-white rounded-[26px] p-5 shadow-[6px_8px_18px_rgba(210,190,175,0.18)] border-2 border-[#FFAAA6] flex flex-col justify-between space-y-3">
+                <div>
+                  <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-[#FFD6DE] text-[#A84A60]">Tomo 1 · A0 a B2</span>
+                  <h3 className="text-base font-black text-[#3D352E] mt-2">Inglés Dibujado</h3>
+                  <p className="text-xs text-[#6B5E55] leading-relaxed">
+                    49 temas visuales completos con esquemas, líneas de tiempo, trucos rápidos y ejercicios con respuestas.
+                  </p>
+                </div>
+                <div className="space-y-2 pt-2">
+                  <a
+                    href="/pdfs/ingles-dibujado.pdf"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full py-2.5 rounded-[16px] bg-[#FF85A1] text-white font-black text-xs block text-center shadow-sm"
+                  >
+                    📖 Abrir PDF Completo ↗
+                  </a>
+                  <a
+                    href="goodnotes://"
+                    className="w-full py-2 rounded-[16px] bg-[#FAF6F0] text-[#7A6E63] font-bold text-[11px] block text-center border"
+                  >
+                    ✏️ Rayar en Goodnotes ↗
+                  </a>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-[26px] p-5 shadow-[6px_8px_18px_rgba(210,190,175,0.18)] border-2 border-[#86EFAC] flex flex-col justify-between space-y-3">
+                <div>
+                  <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-[#D9EBD9] text-[#1E523A]">Tomo 2 · Práctico</span>
+                  <h3 className="text-base font-black text-[#3D352E] mt-2">Phrasal Verbs Dibujados</h3>
+                  <p className="text-xs text-[#6B5E55] leading-relaxed">
+                    Más de 40 phrasal verbs esenciales organizados por la flecha de la partícula (Up, Out, On, Off, Down, Back, Over, Away).
+                  </p>
+                </div>
+                <div className="space-y-2 pt-2">
+                  <a
+                    href="/pdfs/phrasal-verbs.pdf"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full py-2.5 rounded-[16px] bg-[#52B788] text-white font-black text-xs block text-center shadow-sm"
+                  >
+                    📖 Abrir PDF Completo ↗
+                  </a>
+                  <a
+                    href="goodnotes://"
+                    className="w-full py-2 rounded-[16px] bg-[#FAF6F0] text-[#7A6E63] font-bold text-[11px] block text-center border"
+                  >
+                    ✏️ Rayar en Goodnotes ↗
+                  </a>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-[26px] p-5 shadow-[6px_8px_18px_rgba(210,190,175,0.18)] border-2 border-[#7DD3FC] flex flex-col justify-between space-y-3">
+                <div>
+                  <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-[#D4EBF8] text-[#0369A1]">Tomo 3 · Escenas</span>
+                  <h3 className="text-base font-black text-[#3D352E] mt-2">Vocabulario Dibujado</h3>
+                  <p className="text-xs text-[#6B5E55] leading-relaxed">
+                    25 escenas de la vida real (cocina, aeropuerto, casa, ropa, emociones) con pronunciación escrita criolla y frases útiles.
+                  </p>
+                </div>
+                <div className="space-y-2 pt-2">
+                  <a
+                    href="/pdfs/vocabulario-dibujado.pdf"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full py-2.5 rounded-[16px] bg-[#0284C7] text-white font-black text-xs block text-center shadow-sm"
+                  >
+                    📖 Abrir PDF Completo ↗
+                  </a>
+                  <a
+                    href="goodnotes://"
+                    className="w-full py-2 rounded-[16px] bg-[#FAF6F0] text-[#7A6E63] font-bold text-[11px] block text-center border"
+                  >
+                    ✏️ Rayar en Goodnotes ↗
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================= */}
+        {/* 4. DASHBOARD & FOCUS (PLANTA 🌱) */}
         {/* ========================================================= */}
         {activeTab === 'pomodoro' && (
           <div className="space-y-6">
@@ -841,7 +1074,7 @@ export default function Home() {
                   Let&apos;s master your English today! 🎶
                 </h2>
                 <p className="text-xs text-[#7A6E63] max-w-md font-medium">
-                  Comienza tu semana de estudio con bloques de 15 a 20 minutos de inmersión y enfoque.
+                  Comienza tu sesión de estudio con bloques de 15 a 20 minutos de inmersión y enfoque.
                 </p>
                 <div className="pt-2 flex flex-wrap gap-2.5">
                   <button
@@ -867,7 +1100,6 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* TU PLANTA VIVA 🌱 */}
               <div className="flex items-center gap-3">
                 <div
                   onClick={handleWaterPlant}
@@ -881,7 +1113,6 @@ export default function Home() {
               </div>
             </div>
 
-            {/* CRONÓMETRO */}
             <div className="bg-white rounded-[28px] p-6 space-y-4 shadow-[8px_10px_22px_rgba(210,190,175,0.22)]">
               <div className="flex justify-between items-center">
                 <div>
@@ -922,6 +1153,14 @@ export default function Home() {
                   {isRunning ? '⏸️ Pausar Bloque' : '▶️ Iniciar Estudio (+XP)'}
                 </button>
                 <button
+                  onClick={toggleFocusAudio}
+                  className={`px-5 py-3.5 rounded-[20px] text-xs font-black flex items-center gap-1.5 transition-all shadow-sm ${
+                    isAudioPlaying ? 'bg-[#D9EBD9] text-[#1E523A] animate-pulse' : 'bg-white text-[#695F56]'
+                  }`}
+                >
+                  <span>{isAudioPlaying ? '🌧️' : '🎧'}</span> {isAudioPlaying ? 'Lluvia Activa' : 'Lluvia Ambiental'}
+                </button>
+                <button
                   onClick={() => {
                     playPopSound();
                     setIsRunning(false);
@@ -934,7 +1173,6 @@ export default function Home() {
               </div>
             </div>
 
-            {/* MÉTRICAS */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
               {[
                 { label: 'Puntos XP', val: `${xp}`, sub: 'Nivel Explorer', icon: '⭐', bg: 'bg-[#FFF1C5]' },
@@ -955,9 +1193,8 @@ export default function Home() {
               ))}
             </div>
 
-            {/* RACHA SEMANAL */}
             <div className="bg-white rounded-[26px] p-5 shadow-[6px_8px_18px_rgba(210,190,175,0.18)] border border-[#F3ECE1] space-y-3">
-              <div className="text-xs font-black text-[#3D352E]">Racha Semanal de Aprendizaje</div>
+              <div className="text-xs font-black text-[#3D352E]">Racha Semanal de Consistencia</div>
               <div className="grid grid-cols-7 gap-2">
                 {daysOfWeek.map((day, i) => (
                   <div
@@ -982,7 +1219,7 @@ export default function Home() {
         )}
 
         {/* ========================================================= */}
-        {/* 3. BUSCADOR GLOBAL DE VERBOS (2,151) */}
+        {/* 5. BUSCADOR GLOBAL DE VERBOS (2,151 VERBOS) */}
         {/* ========================================================= */}
         {activeTab === 'verbos' && (
           <div className="space-y-6">
@@ -1073,7 +1310,7 @@ export default function Home() {
         )}
 
         {/* ========================================================= */}
-        {/* 4. VOCABULARIO ESENCIAL (5,000 PALABRAS + BONO 5 + FALSOS AMIGOS) */}
+        {/* 6. VOCABULARIO ESENCIAL (5,000 PALABRAS + BONO 5 + FALSOS AMIGOS) */}
         {/* ========================================================= */}
         {activeTab === 'vocabulario' && (
           <div className="space-y-6">
@@ -1178,7 +1415,7 @@ export default function Home() {
         )}
 
         {/* ========================================================= */}
-        {/* 5. HUB DE PLATAFORMAS (CON LOS BOTONES DE COLORES QUE TE GUSTABAN) */}
+        {/* 7. HUB DE PLATAFORMAS (CON LOS BOTONES DE COLORES) */}
         {/* ========================================================= */}
         {activeTab === 'hub' && (
           <div className="space-y-6">
@@ -1218,8 +1455,7 @@ export default function Home() {
         )}
 
         {/* ========================================================= */}
-        {/* 6. BIBLIOTECA DE CURSOS */}
-        {/* ========================================================= */}
+        {/* 8. BIBLIOTECA DE CURSOS */}
         {activeTab === 'cursos' && (
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -1395,83 +1631,7 @@ export default function Home() {
         )}
 
         {/* ========================================================= */}
-        {/* 7. LISTENING & INMERSIÓN */}
-        {/* ========================================================= */}
-        {activeTab === 'listening' && (
-          <div className="space-y-6">
-            <div>
-              <h1 className="text-2xl font-black text-[#3D352E] tracking-tight flex items-center gap-2">
-                Listening & Gimnasio Auditivo <span>🎧</span>
-              </h1>
-              <p className="text-[#7A6E63] text-xs mt-1">Estrategias y clips para acostumbrar el oído al inglés a velocidad nativa.</p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="bg-white rounded-[28px] p-6 space-y-3 shadow-[8px_10px_22px_rgba(210,190,175,0.22)]">
-                <span className="text-[10px] font-black uppercase px-3 py-1 rounded-full bg-[#FFD6DE] text-[#A84A60] inline-block shadow-sm">
-                  Método 1 • Connected Speech
-                </span>
-                <h3 className="font-black text-sm text-[#3D352E]">El Filtro YouGlish 🎬</h3>
-                <p className="text-xs text-[#6B5E55] leading-relaxed">
-                  Los nativos enlazan sonidos (por ejemplo, going to suena gonna). Busca frases cortas en YouGlish para entrenar el oído a la cadencia real.
-                </p>
-                <a
-                  href="https://youglish.com/pronounce/english"
-                  target="_blank"
-                  onClick={playPopSound}
-                  className="inline-block px-5 py-2.5 rounded-[18px] bg-gradient-to-r from-[#FFAAA6] to-[#FF85A1] text-xs font-black text-white shadow-sm"
-                >
-                  Probar en YouGlish ↗
-                </a>
-              </div>
-
-              <div className="bg-white rounded-[28px] p-6 space-y-3 shadow-[8px_10px_22px_rgba(210,190,175,0.22)]">
-                <span className="text-[10px] font-black uppercase px-3 py-1 rounded-full bg-[#D4EBF8] text-[#1E6091] inline-block shadow-sm">
-                  Método 2 • Micro-Inmersión
-                </span>
-                <h3 className="font-black text-sm text-[#3D352E]">BBC 6 Minute English 📻</h3>
-                <p className="text-xs text-[#6B5E55] leading-relaxed">
-                  Escucha un episodio breve de 6 minutos sin leer. En la segunda vuelta, sigue la transcripción para identificar exactamente los sonidos que no captaste al inicio.
-                </p>
-                <a
-                  href="https://www.bbc.co.uk/learningenglish/features/6-minute-english"
-                  target="_blank"
-                  onClick={playPopSound}
-                  className="inline-block px-5 py-2.5 rounded-[18px] bg-[#38BDF8] hover:bg-[#0284C7] text-white font-black text-xs shadow-sm"
-                >
-                  Escuchar BBC 6-Minute ↗
-                </a>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-[24px] p-5 sm:p-6 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-[6px_8px_18px_rgba(210,190,175,0.18)]">
-              <div className="flex items-center gap-3.5">
-                <div className="w-13 h-13 rounded-[20px] bg-[#D9EBD9] flex items-center justify-center text-2xl shrink-0 shadow-sm">
-                  🎧
-                </div>
-                <div>
-                  <div className="text-xs font-black text-[#3D352E]">Meta de Escucha Diaria: 20 Minutos</div>
-                  <div className="text-[11px] text-[#7A6E63] font-semibold">Podcasts, audio-lecciones de Gringo Academy o videos YouGlish.</div>
-                </div>
-              </div>
-              <button
-                onClick={() => {
-                  playChimeSound();
-                  setXp(prev => prev + 30);
-                  setTotalMinutes(prev => prev + 20);
-                  setWaterDrops(prev => prev + 2);
-                  showSaveNotice('20 min de Listening registrados! +30 XP');
-                }}
-                className="w-full sm:w-auto px-5 py-2.5 rounded-[18px] bg-[#52B788] hover:bg-[#40916C] text-white font-black text-xs shadow-sm whitespace-nowrap"
-              >
-                ✅ Marcar como Completado (+30 XP)
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* ========================================================= */}
-        {/* 8. WRITING CLINIC */}
+        {/* 9. WRITING CLINIC */}
         {/* ========================================================= */}
         {activeTab === 'writing' && (
           <div className="space-y-6">
@@ -1530,125 +1690,6 @@ export default function Home() {
                 <div className="bg-[#FAF6F0] rounded-[20px] p-5 text-xs whitespace-pre-line text-[#403833] leading-relaxed font-medium shadow-inner">
                   {writingFeedback}
                 </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* ========================================================= */}
-        {/* 9. RUTA DE HITOS */}
-        {/* ========================================================= */}
-        {activeTab === 'milestones' && (
-          <div className="space-y-6">
-            <div>
-              <h1 className="text-2xl font-black text-[#3D352E] tracking-tight flex items-center gap-2">
-                Ruta Curricular de Hitos (A0 a C2) <span>🗺️</span>
-              </h1>
-              <p className="text-[#7A6E63] text-xs mt-1">El mapa de gramática, objetivos y competencias del Marco Común Europeo.</p>
-            </div>
-
-            <div className="flex gap-2.5 overflow-x-auto pb-1.5">
-              {[
-                { id: 'A0', label: 'A0: Starter', color: 'bg-[#FFD6DE] text-[#A84A60]' },
-                { id: 'A1', label: 'A1: Elemental', color: 'bg-[#D4EBF8] text-[#1E6091]' },
-                { id: 'A2', label: 'A2: Pre-Intermedio', color: 'bg-[#D9EBD9] text-[#1E523A]' },
-                { id: 'B1', label: 'B1: Intermedio', color: 'bg-[#E6DCF5] text-[#5B21B6]' },
-                { id: 'B2', label: 'B2: Fluidez', color: 'bg-[#FFD6DE] text-[#A84A60]' },
-                { id: 'C1', label: 'C1: Avanzado', color: 'bg-[#FFF1C5] text-[#7A5B00]' },
-                { id: 'C2', label: 'C2: Nativo', color: 'bg-[#EAF5EC] text-[#266245]' },
-              ].map(lvl => (
-                <button
-                  key={lvl.id}
-                  onClick={() => {
-                    playPopSound();
-                    setSelectedMilestone(lvl.id);
-                  }}
-                  className={`px-4 py-2.5 rounded-[18px] text-xs font-black transition-all shrink-0 ${
-                    selectedMilestone === lvl.id
-                      ? `${lvl.color} scale-105 shadow-sm`
-                      : 'bg-white text-[#695F56] shadow-sm'
-                  }`}
-                >
-                  {lvl.label}
-                </button>
-              ))}
-            </div>
-
-            <div className="bg-white rounded-[28px] p-6 sm:p-7 space-y-4 shadow-[8px_10px_22px_rgba(210,190,175,0.22)]">
-              {selectedMilestone === 'A0' && (
-                <>
-                  <span className="text-[10px] font-black uppercase px-3 py-1 rounded-full bg-[#FFD6DE] text-[#A84A60] inline-block shadow-sm">Nivel A0 • Primeros Pasos</span>
-                  <h3 className="text-base font-black text-[#3D352E]">Fundamentos Absolutos y Desbloqueo Inicial</h3>
-                  <ul className="text-xs text-[#52443C] space-y-2.5 leading-relaxed font-medium">
-                    <li>• <strong>Gramática indispensable:</strong> Verbo To Be en afirmación, negación y pregunta. Pronombres personales y adjetivos posesivos.</li>
-                    <li>• <strong>Expresiones fijas:</strong> Edad (I am 38 years old), origen y alfabeto.</li>
-                    <li>• <strong>Meta evaluable:</strong> Presentarte a ti misma con pronunciación clara.</li>
-                  </ul>
-                </>
-              )}
-
-              {selectedMilestone === 'A1' && (
-                <>
-                  <span className="text-[10px] font-black uppercase px-3 py-1 rounded-full bg-[#D4EBF8] text-[#1E6091] inline-block shadow-sm">Nivel A1 • Elemental</span>
-                  <h3 className="text-base font-black text-[#3D352E]">Rutinas y Entorno Cotidiano</h3>
-                  <ul className="text-xs text-[#52443C] space-y-2.5 leading-relaxed font-medium">
-                    <li>• <strong>Gramática indispensable:</strong> Presente Simple (regla de tercera persona con -s/-es), auxiliares do / does y preposiciones.</li>
-                    <li>• <strong>Meta evaluable:</strong> Describir tu día típico de la mañana a la noche.</li>
-                  </ul>
-                </>
-              )}
-
-              {selectedMilestone === 'A2' && (
-                <>
-                  <span className="text-[10px] font-black uppercase px-3 py-1 rounded-full bg-[#D9EBD9] text-[#1E523A] inline-block shadow-sm">Nivel A2 • Pre-Intermedio</span>
-                  <h3 className="text-base font-black text-[#3D352E]">Pasado, Planes y Experiencias Inmediatas</h3>
-                  <ul className="text-xs text-[#52443C] space-y-2.5 leading-relaxed font-medium">
-                    <li>• <strong>Gramática:</strong> Pasado Simple regular (-ed) y verbos irregulares clave, pasado continuo, y futuro con going to vs will.</li>
-                    <li>• <strong>Meta:</strong> Contar qué hiciste el fin de semana pasado.</li>
-                  </ul>
-                </>
-              )}
-
-              {selectedMilestone === 'B1' && (
-                <>
-                  <span className="text-[10px] font-black uppercase px-3 py-1 rounded-full bg-[#E6DCF5] text-[#5B21B6] inline-block shadow-sm">Nivel B1 • Intermedio Independiente</span>
-                  <h3 className="text-base font-black text-[#3D352E]">Autonomía Conversacional y Trabajo</h3>
-                  <ul className="text-xs text-[#52443C] space-y-2.5 leading-relaxed font-medium">
-                    <li>• <strong>Gramática:</strong> Present Perfect, condicionales y verbos modales.</li>
-                    <li>• <strong>Meta:</strong> Mantener una conversación fluida de 15 minutos sobre tus proyectos.</li>
-                  </ul>
-                </>
-              )}
-
-              {selectedMilestone === 'B2' && (
-                <>
-                  <span className="text-[10px] font-black uppercase px-3 py-1 rounded-full bg-[#FFD6DE] text-[#A84A60] inline-block shadow-sm">Nivel B2 • Fluidez Profesional</span>
-                  <h3 className="text-base font-black text-[#3D352E]">Dominio Laboral y Fluidez Espontánea</h3>
-                  <ul className="text-xs text-[#52443C] space-y-2.5 leading-relaxed font-medium">
-                    <li>• <strong>Gramática:</strong> Condicionales avanzados, voz pasiva y phrasal verbs idiomáticos.</li>
-                    <li>• <strong>Meta:</strong> Participar en reuniones internacionales.</li>
-                  </ul>
-                </>
-              )}
-
-              {selectedMilestone === 'C1' && (
-                <>
-                  <span className="text-[10px] font-black uppercase px-3 py-1 rounded-full bg-[#FFF1C5] text-[#7A5B00] inline-block shadow-sm">Nivel C1 • Avanzado Operativo</span>
-                  <h3 className="text-base font-black text-[#3D352E]">Dominio Académico y Especializado</h3>
-                  <ul className="text-xs text-[#52443C] space-y-2.5 leading-relaxed font-medium">
-                    <li>• <strong>Gramática:</strong> Inversión gramatical enfática y estilo formal.</li>
-                  </ul>
-                </>
-              )}
-
-              {selectedMilestone === 'C2' && (
-                <>
-                  <span className="text-[10px] font-black uppercase px-3 py-1 rounded-full bg-[#EAF5EC] text-[#266245] inline-block shadow-sm">Nivel C2 • Maestría Nativa</span>
-                  <h3 className="text-base font-black text-[#3D352E]">Bilingüismo Completo y Espontaneidad</h3>
-                  <ul className="text-xs text-[#52443C] space-y-2.5 leading-relaxed font-medium">
-                    <li>• <strong>Competencias:</strong> Captar ironías, modismos culturales y control total del tono.</li>
-                  </ul>
-                </>
               )}
             </div>
           </div>
