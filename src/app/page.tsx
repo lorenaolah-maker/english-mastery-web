@@ -47,6 +47,7 @@ interface WordItemFull {
   theme: string;
 }
 
+// Datos de Phrasal Verbs por Flechas (Tomo 2)
 const phrasalVerbsData = [
   {
     particle: 'UP',
@@ -162,9 +163,49 @@ const phrasalVerbsData = [
   }
 ];
 
+// Datos estructurados de la Biblioteca Dibujada (para distribuirlos como Phrasal Verbs)
+const guiasDibujadasData = [
+  {
+    id: 'tomo1',
+    label: 'Tomo 1: Inglés Dibujado',
+    subtitle: '49 Temas Visuales (A0 a B2) con esquemas y ejercicios',
+    color: 'bg-[#FFD6DE] text-[#A84A60] border-[#FFAAA6]',
+    secciones: [
+      { title: 'Parte 1: Los Cimientos (A0-A1)', desc: '12 temas: Pronombres, To Be, There is/are, Artículos, Plurales, In/On/At, Preposiciones de lugar y movimiento.' },
+      { title: 'Parte 2: Moverse en el Tiempo (A1-A2)', desc: '13 temas: Mapa de tiempos, Presente Simple, Preguntas QASI, Pasado Simple (-ed), Continuo vs Simple, Futuro (Will / Going to).' },
+      { title: 'Parte 3: Conectar Ideas (A2-B1)', desc: '12 temas: Presente Perfecto, Already/Yet, Pasado Perfecto, Obligación (Must vs Have to), Consejos, Make vs Do.' },
+      { title: 'Parte 4: Sonar Natural (B1-B2)', desc: '12 temas: Condicionales 0 a 3, Mixtos, Wish/Ojalá, Voz Pasiva, Estilo Indirecto, Question tags, Inglés Conectado.' }
+    ]
+  },
+  {
+    id: 'tomo2',
+    label: 'Tomo 2: Phrasal Verbs',
+    subtitle: '40+ Verbos agrupados por las 8 flechas de dirección',
+    color: 'bg-[#D9EBD9] text-[#1E523A] border-[#86EFAC]',
+    secciones: [
+      { title: 'Flecha UP ↑ (Arriba / Completo)', desc: 'Wake up, Get up, Grow up, Show up, Give up, Pick up.' },
+      { title: 'Flecha OUT ➔ (Hacia afuera / Descubrir)', desc: 'Find out, Figure out, Run out of, Work out, Hang out, Check out.' },
+      { title: 'Flecha ON ➔ (Continuar / Activar)', desc: 'Go on, Carry on, Put on, Turn on, Get on, Hold on.' },
+      { title: 'Flechas OFF ↘ / DOWN ↓ / BACK ⮌ / OVER ↷ / AWAY ⇢', desc: 'Separar, reducir, volver, superar y alejarse explicados con dibujos.' }
+    ]
+  },
+  {
+    id: 'tomo3',
+    label: 'Tomo 3: Vocabulario Dibujado',
+    subtitle: '25 Escenas de la vida real con pronunciación criolla',
+    color: 'bg-[#D4EBF8] text-[#0369A1] border-[#7DD3FC]',
+    secciones: [
+      { title: 'Escenas Cotidianas 🍳', desc: 'La cocina y la comida, El cuerpo humano, La ropa, La casa y sus muebles, Las bebidas.' },
+      { title: 'Escenas Urbanas & Viajes ✈️', desc: 'El trabajo y la oficina, El aeropuerto y vuelos, La ciudad y comercios, Transporte, El dinero y compras.' },
+      { title: 'Escenas de Conversación 💬', desc: 'La familia, El clima, Verbos del día a día, Las emociones, Saludos y fórmulas de cortesía.' }
+    ]
+  }
+];
+
 export default function Home() {
   const [activeTab, setActiveTab] = useState('mision');
 
+  // Métricas
   const [xp, setXp] = useState(0);
   const [streak, setStreak] = useState(1);
   const [totalMinutes, setTotalMinutes] = useState(0);
@@ -173,39 +214,49 @@ export default function Home() {
   const [currentDay, setCurrentDay] = useState(1);
   const [showConjugation, setShowConjugation] = useState<number | null>(null);
 
+  // Registro semanal
   const [weeklyActive, setWeeklyActive] = useState<boolean[]>([true, false, false, false, false, false, false]);
 
+  // Bases de datos JSON
   const [allVerbs, setAllVerbs] = useState<VerbItemFull[]>([]);
   const [allWords, setAllWords] = useState<WordItemFull[]>([]);
 
+  // Mini-Juego de Parejas
   const [gameCards, setGameCards] = useState<{ id: string; text: string; matchId: string; isMatched: boolean }[]>([]);
   const [selectedCards, setSelectedCards] = useState<number[]>([]);
   const [gameWon, setGameWon] = useState(false);
 
+  // Estados interactivos para Phrasal Verbs y Biblioteca Dibujada
   const [selectedParticle, setSelectedParticle] = useState('UP');
+  const [selectedGuia, setSelectedGuia] = useState('tomo1');
 
+  // Audio Ambiental y Efectos
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const sfxCtxRef = useRef<AudioContext | null>(null);
 
+  // Temporizador Pomodoro
   const [pomoMinutes, setPomoMinutes] = useState(15);
   const [timeLeft, setTimeLeft] = useState(15 * 60);
   const [isRunning, setIsRunning] = useState(false);
   const [savedNotice, setSavedNotice] = useState<string | null>(null);
 
+  // Buscadores
   const [verbSearch, setVerbSearch] = useState('');
   const [verbFilter, setVerbFilter] = useState('TODOS');
   const [vocabTab, setVocabTab] = useState('200_SUSTANTIVOS');
   const [vocabSearch, setVocabSearch] = useState('');
 
+  // Writing Clinic
   const [writingType, setWritingType] = useState('Diario personal / Reflexion del dia');
   const [writingText, setWritingText] = useState('');
   const [writingFeedback, setWritingFeedback] = useState<string | null>(null);
   const [isWritingAnalyzing, setIsWritingAnalyzing] = useState(false);
 
-  const [ipWeek, setIpWeek] = useState(1);
-  const [gringoUnit, setGringoUnit] = useState(1);
-  const [neuralWeek, setNeuralWeek] = useState(1);
+  // Control simplificado de Cursos
+  const [curso1Semana, setCurso1Semana] = useState(1);
+  const [curso2Capitulo, setCurso2Capitulo] = useState(1);
+  const [curso3Fase, setCurso3Fase] = useState(1);
 
   const plantData = [
     { icon: '🌱', name: 'Semillita Brotando', desc: 'Regada con tus primeros minutos de inmersión.' },
@@ -556,7 +607,7 @@ export default function Home() {
             {[
               { id: 'mision', label: 'Misión Diaria (3V + 7P)', icon: '⭐', badge: 'Duolingo Mode', bg: 'bg-[#FFF1C5]' },
               { id: 'phrasal', label: 'Phrasal Verbs (Flechas)', icon: '🏹', badge: 'Tomo 2', bg: 'bg-[#D9EBD9]' },
-              { id: 'guias_pdf', label: 'Biblioteca Dibujada', icon: '🎨', badge: 'PDFs 1, 2 y 3', bg: 'bg-[#FFD6DE]' },
+              { id: 'guias_pdf', label: 'Biblioteca Dibujada', icon: '🎨', badge: 'Tomos 1, 2 y 3', bg: 'bg-[#FFD6DE]' },
               { id: 'pomodoro', label: 'Dashboard & Focus', icon: '⏱️', badge: 'Focus & Planta', bg: 'bg-[#D4EBF8]' },
               { id: 'verbos', label: 'Buscador de Verbos', icon: '⚡', badge: '2,151 Verbos', bg: 'bg-[#FFF1C5]' },
               { id: 'vocabulario', label: 'Vocabulario Esencial', icon: '📖', badge: '5,000 Palabras', bg: 'bg-[#D9EBD9]' },
@@ -614,7 +665,7 @@ export default function Home() {
           </div>
         )}
 
-        {/* 1. MODO DUOLINGO: MISIÓN DIARIA */}
+        {/* 1. MISIÓN DIARIA (CON CONJUGACIÓN COMPLETA) */}
         {activeTab === 'mision' && (
           <div className="space-y-6">
             <div className="bg-gradient-to-r from-[#FFF4F6] via-[#FFF9F3] to-white rounded-[28px] p-6 border-2 border-[#FADCD5] shadow-[8px_10px_22px_rgba(210,190,175,0.22)] flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -883,7 +934,7 @@ export default function Home() {
         )}
 
         {/* ========================================================= */}
-        {/* 2. NUEVO: PHRASAL VERBS POR FLECHAS (TOMO 2 DIBUJADO) */}
+        {/* 2. PHRASAL VERBS POR FLECHAS (TOMO 2) */}
         {/* ========================================================= */}
         {activeTab === 'phrasal' && (
           <div className="space-y-6">
@@ -961,7 +1012,7 @@ export default function Home() {
         )}
 
         {/* ========================================================= */}
-        {/* 3. NUEVO: BIBLIOTECA DE GUÍAS DIBUJADAS (TOMOS 1, 2 Y 3) */}
+        {/* 3. BIBLIOTECA DIBUJADA (DISTRIBUIDA COMO PHRASAL VERBS) */}
         {/* ========================================================= */}
         {activeTab === 'guias_pdf' && (
           <div className="space-y-6">
@@ -970,97 +1021,70 @@ export default function Home() {
                 Material Visual Oficial Comprado 🎨
               </span>
               <h1 className="text-2xl font-black text-[#3D352E] tracking-tight mt-1">
-                Tus 3 Guías Visuales de Inglés Práctico
+                Biblioteca Visual: Inglés Dibujado
               </h1>
               <p className="text-xs text-[#7A6E63] mt-0.5">
-                Ábrelas directo en tu navegador o expórtalas a Goodnotes para rayar los ejercicios con tu Apple Pencil.
+                Consulta los esquemas organizados por tomos y ábrelos directamente en Goodnotes para rellenar los ejercicios a mano.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="bg-white rounded-[26px] p-5 shadow-[6px_8px_18px_rgba(210,190,175,0.18)] border-2 border-[#FFAAA6] flex flex-col justify-between space-y-3">
-                <div>
-                  <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-[#FFD6DE] text-[#A84A60]">Tomo 1 · A0 a B2</span>
-                  <h3 className="text-base font-black text-[#3D352E] mt-2">Inglés Dibujado</h3>
-                  <p className="text-xs text-[#6B5E55] leading-relaxed">
-                    49 temas visuales completos con esquemas, líneas de tiempo, trucos rápidos y ejercicios con respuestas.
-                  </p>
-                </div>
-                <div className="space-y-2 pt-2">
-                  <a
-                    href="/pdfs/ingles-dibujado.pdf"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full py-2.5 rounded-[16px] bg-[#FF85A1] text-white font-black text-xs block text-center shadow-sm"
-                  >
-                    📖 Abrir PDF Completo ↗
-                  </a>
-                  <a
-                    href="goodnotes://"
-                    className="w-full py-2 rounded-[16px] bg-[#FAF6F0] text-[#7A6E63] font-bold text-[11px] block text-center border"
-                  >
-                    ✏️ Rayar en Goodnotes ↗
-                  </a>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-[26px] p-5 shadow-[6px_8px_18px_rgba(210,190,175,0.18)] border-2 border-[#86EFAC] flex flex-col justify-between space-y-3">
-                <div>
-                  <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-[#D9EBD9] text-[#1E523A]">Tomo 2 · Práctico</span>
-                  <h3 className="text-base font-black text-[#3D352E] mt-2">Phrasal Verbs Dibujados</h3>
-                  <p className="text-xs text-[#6B5E55] leading-relaxed">
-                    Más de 40 phrasal verbs esenciales organizados por la flecha de la partícula (Up, Out, On, Off, Down, Back, Over, Away).
-                  </p>
-                </div>
-                <div className="space-y-2 pt-2">
-                  <a
-                    href="/pdfs/phrasal-verbs.pdf"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full py-2.5 rounded-[16px] bg-[#52B788] text-white font-black text-xs block text-center shadow-sm"
-                  >
-                    📖 Abrir PDF Completo ↗
-                  </a>
-                  <a
-                    href="goodnotes://"
-                    className="w-full py-2 rounded-[16px] bg-[#FAF6F0] text-[#7A6E63] font-bold text-[11px] block text-center border"
-                  >
-                    ✏️ Rayar en Goodnotes ↗
-                  </a>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-[26px] p-5 shadow-[6px_8px_18px_rgba(210,190,175,0.18)] border-2 border-[#7DD3FC] flex flex-col justify-between space-y-3">
-                <div>
-                  <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-[#D4EBF8] text-[#0369A1]">Tomo 3 · Escenas</span>
-                  <h3 className="text-base font-black text-[#3D352E] mt-2">Vocabulario Dibujado</h3>
-                  <p className="text-xs text-[#6B5E55] leading-relaxed">
-                    25 escenas de la vida real (cocina, aeropuerto, casa, ropa, emociones) con pronunciación escrita criolla y frases útiles.
-                  </p>
-                </div>
-                <div className="space-y-2 pt-2">
-                  <a
-                    href="/pdfs/vocabulario-dibujado.pdf"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full py-2.5 rounded-[16px] bg-[#0284C7] text-white font-black text-xs block text-center shadow-sm"
-                  >
-                    📖 Abrir PDF Completo ↗
-                  </a>
-                  <a
-                    href="goodnotes://"
-                    className="w-full py-2 rounded-[16px] bg-[#FAF6F0] text-[#7A6E63] font-bold text-[11px] block text-center border"
-                  >
-                    ✏️ Rayar en Goodnotes ↗
-                  </a>
-                </div>
-              </div>
+            {/* Selector de Tomo con botones pill estilo Phrasal Verbs */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+              {guiasDibujadasData.map(g => (
+                <button
+                  key={g.id}
+                  onClick={() => {
+                    playPopSound();
+                    setSelectedGuia(g.id);
+                  }}
+                  className={`p-4 rounded-[22px] text-left font-black transition-all border ${
+                    selectedGuia === g.id
+                      ? `${g.color} scale-105 shadow-md`
+                      : 'bg-white text-[#7A6E63] border-[#E8DFC8]'
+                  }`}
+                >
+                  <div className="text-xs uppercase font-extrabold">{g.label}</div>
+                  <div className="text-[10px] font-semibold opacity-85 mt-1 line-clamp-1">{g.subtitle}</div>
+                </button>
+              ))}
             </div>
+
+            {/* Vista del Tomo Seleccionado con tarjeta y acceso a Goodnotes */}
+            {(() => {
+              const currentGuia = guiasDibujadasData.find(g => g.id === selectedGuia) || guiasDibujadasData[0];
+              return (
+                <div className="bg-white rounded-[28px] p-6 shadow-[8px_10px_22px_rgba(210,190,175,0.22)] border border-[#F3ECE1] space-y-5">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#F3ECE1] pb-4">
+                    <div>
+                      <h2 className="text-lg font-black text-[#3D352E]">{currentGuia.label}</h2>
+                      <p className="text-xs text-[#7A6E63]">{currentGuia.subtitle}</p>
+                    </div>
+
+                    <a
+                      href="goodnotes://"
+                      onClick={playPopSound}
+                      className="px-5 py-2.5 rounded-[18px] bg-gradient-to-r from-[#FFAAA6] to-[#FF85A1] text-white font-black text-xs text-center shadow-sm"
+                    >
+                      ✏️ Abrir y Rayar en Goodnotes ↗
+                    </a>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    {currentGuia.secciones.map((sec, idx) => (
+                      <div key={idx} className="p-4 rounded-[20px] bg-[#FAF6F0] border border-[#F3ECE1] space-y-1.5">
+                        <div className="text-sm font-black text-[#3D352E]">{sec.title}</div>
+                        <p className="text-xs text-[#6B5E55] leading-relaxed">{sec.desc}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         )}
 
         {/* ========================================================= */}
-        {/* 4. DASHBOARD & FOCUS (PLANTA 🌱) */}
+        {/* 4. DASHBOARD & FOCUS (CON PLANTA VIVA 🌱) */}
         {/* ========================================================= */}
         {activeTab === 'pomodoro' && (
           <div className="space-y-6">
@@ -1100,6 +1124,7 @@ export default function Home() {
                 </div>
               </div>
 
+              {/* PLANTA VIVA 🌱 */}
               <div className="flex items-center gap-3">
                 <div
                   onClick={handleWaterPlant}
@@ -1113,6 +1138,7 @@ export default function Home() {
               </div>
             </div>
 
+            {/* CRONÓMETRO */}
             <div className="bg-white rounded-[28px] p-6 space-y-4 shadow-[8px_10px_22px_rgba(210,190,175,0.22)]">
               <div className="flex justify-between items-center">
                 <div>
@@ -1153,14 +1179,6 @@ export default function Home() {
                   {isRunning ? '⏸️ Pausar Bloque' : '▶️ Iniciar Estudio (+XP)'}
                 </button>
                 <button
-                  onClick={toggleFocusAudio}
-                  className={`px-5 py-3.5 rounded-[20px] text-xs font-black flex items-center gap-1.5 transition-all shadow-sm ${
-                    isAudioPlaying ? 'bg-[#D9EBD9] text-[#1E523A] animate-pulse' : 'bg-white text-[#695F56]'
-                  }`}
-                >
-                  <span>{isAudioPlaying ? '🌧️' : '🎧'}</span> {isAudioPlaying ? 'Lluvia Activa' : 'Lluvia Ambiental'}
-                </button>
-                <button
                   onClick={() => {
                     playPopSound();
                     setIsRunning(false);
@@ -1173,6 +1191,7 @@ export default function Home() {
               </div>
             </div>
 
+            {/* MÉTRICAS */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
               {[
                 { label: 'Puntos XP', val: `${xp}`, sub: 'Nivel Explorer', icon: '⭐', bg: 'bg-[#FFF1C5]' },
@@ -1219,7 +1238,7 @@ export default function Home() {
         )}
 
         {/* ========================================================= */}
-        {/* 5. BUSCADOR GLOBAL DE VERBOS (2,151 VERBOS) */}
+        {/* 5. BUSCADOR GLOBAL DE VERBOS (2,151) */}
         {/* ========================================================= */}
         {activeTab === 'verbos' && (
           <div className="space-y-6">
@@ -1415,7 +1434,7 @@ export default function Home() {
         )}
 
         {/* ========================================================= */}
-        {/* 7. HUB DE PLATAFORMAS (CON LOS BOTONES DE COLORES) */}
+        {/* 7. HUB DE PLATAFORMAS (CON BOTONES DE COLORES) */}
         {/* ========================================================= */}
         {activeTab === 'hub' && (
           <div className="space-y-6">
@@ -1455,176 +1474,132 @@ export default function Home() {
         )}
 
         {/* ========================================================= */}
-        {/* 8. BIBLIOTECA DE CURSOS */}
+        {/* 8. BIBLIOTECA DE CURSOS (MINIMALISTA Y SIN AGOBIOS) */}
+        {/* ========================================================= */}
         {activeTab === 'cursos' && (
           <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div>
-                <h1 className="text-2xl font-black text-[#3D352E] tracking-tight flex items-center gap-2">
-                  Biblioteca de Cursos <span>📚</span>
-                </h1>
-                <p className="text-[#7A6E63] text-xs mt-1">Tus 3 programas de inglés con accesos directos y control semanal.</p>
-              </div>
-              <a
-                href="https://consumer.hotmart.com"
-                target="_blank"
-                onClick={playPopSound}
-                className="px-5 py-2.5 rounded-[20px] bg-gradient-to-r from-[#FFAAA6] to-[#FF85A1] text-xs font-black text-white flex items-center justify-center gap-2 whitespace-nowrap self-start sm:self-auto shadow-sm"
-              >
-                <span>👑</span> Abrir Mi Cuenta Hotmart ↗
-              </a>
+            <div>
+              <span className="text-[10px] font-black uppercase px-3 py-1 rounded-full bg-[#FFF1C5] text-[#8C6200]">
+                Tus Programas Oficiales 📚
+              </span>
+              <h1 className="text-2xl font-black text-[#3D352E] tracking-tight mt-1">
+                Biblioteca de Cursos
+              </h1>
+              <p className="text-xs text-[#7A6E63] mt-0.5">
+                Acceso en un solo toque a tus clases sin formularios complicados.
+              </p>
             </div>
 
-            <div className="bg-white rounded-[28px] p-5 sm:p-6 space-y-4 border-2 border-[#FFE4B5] overflow-hidden shadow-[8px_10px_22px_rgba(210,190,175,0.22)]">
-              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-                <div className="space-y-1">
-                  <span className="text-[10px] uppercase font-black px-3 py-1 rounded-full bg-[#FFF1C5] text-[#8C6200] inline-block shadow-sm">
-                    Curso 1 • Portal Oficial Propio 📱
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {/* CURSO 1: INGLÉS PRÁCTICO */}
+              <div className="bg-white rounded-[26px] p-5 shadow-[6px_8px_18px_rgba(210,190,175,0.18)] border-2 border-[#FFAAA6] flex flex-col justify-between space-y-4">
+                <div>
+                  <span className="text-[10px] uppercase font-black px-2.5 py-0.5 rounded-full bg-[#FFD6DE] text-[#A84A60]">
+                    Curso 1 · Portal Oficial
                   </span>
-                  <h2 className="text-base font-black text-[#3D352E]">Inglés Práctico (App & Biblioteca)</h2>
-                  <p className="text-xs text-[#6B5E55]">Acceso directo a tus clases, material en PDF de cada lección y asistente con IA.</p>
+                  <h3 className="text-base font-black text-[#3D352E] mt-2">Inglés Práctico</h3>
+                  <p className="text-xs text-[#6B5E55] leading-relaxed">
+                    Portal de clases en video, material de apoyo y asistente oficial con IA.
+                  </p>
                 </div>
-                <div className="flex gap-2 shrink-0">
+
+                <div className="space-y-2 pt-2 border-t border-[#F3ECE1]">
+                  <div className="flex items-center justify-between text-xs font-black text-[#4A4139]">
+                    <span>Semana en Curso:</span>
+                    <span className="text-[#A84A60]">Semana {curso1Semana} de 12</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="1"
+                    max="12"
+                    value={curso1Semana}
+                    onChange={e => setCurso1Semana(Number(e.target.value))}
+                    className="w-full accent-[#FF85A1]"
+                  />
                   <a
                     href="https://app.inglespractico.info"
                     target="_blank"
+                    rel="noopener noreferrer"
                     onClick={playPopSound}
-                    className="px-4 py-2 rounded-[18px] bg-[#FFAAA6] hover:bg-[#FF85A1] text-white font-black text-xs shadow-sm whitespace-nowrap"
+                    className="w-full py-2.5 rounded-[16px] bg-[#FF85A1] text-white font-black text-xs block text-center shadow-sm"
                   >
-                    🚀 Abrir App
-                  </a>
-                  <a
-                    href="https://app.inglespractico.info"
-                    target="_blank"
-                    onClick={playPopSound}
-                    className="px-4 py-2 rounded-[18px] bg-[#FFF1C5] text-[#8C6200] font-black text-xs shadow-sm whitespace-nowrap"
-                  >
-                    📖 PDFs
+                    🚀 Abrir Portal ↗
                   </a>
                 </div>
               </div>
 
-              <div className="pt-3 border-t border-[#F3E7DC] flex flex-wrap sm:flex-nowrap items-center gap-2.5">
-                <span className="text-xs font-bold text-[#6D635B] whitespace-nowrap">Semana completada:</span>
-                <select
-                  value={ipWeek}
-                  onChange={e => {
-                    playPopSound();
-                    setIpWeek(Number(e.target.value));
-                  }}
-                  className="flex-1 min-w-[180px] bg-[#F3ECE1] rounded-[20px] p-2.5 text-xs font-black text-[#3D352E] focus:outline-none shadow-inner"
-                >
-                  {Array.from({ length: 12 }, (_, i) => (
-                    <option key={i + 1} value={i + 1}>Semana {i + 1} de 12 (Activación Neural)</option>
-                  ))}
-                </select>
-                <button
-                  onClick={() => {
-                    playChimeSound();
-                    setWaterDrops(prev => prev + 1);
-                    showSaveNotice(`Inglés Práctico guardado en Semana ${ipWeek}`);
-                  }}
-                  className="px-5 py-2.5 rounded-[18px] bg-[#52B788] hover:bg-[#40916C] text-white font-black text-xs shadow-sm whitespace-nowrap ml-auto sm:ml-0"
-                >
-                  💾 Guardar Avance
-                </button>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-[28px] p-5 sm:p-6 space-y-4 border-2 border-[#BAE6FD] overflow-hidden shadow-[8px_10px_22px_rgba(210,190,175,0.22)]">
-              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-                <div className="space-y-1">
-                  <span className="text-[10px] uppercase font-black px-3 py-1 rounded-full bg-[#D4EBF8] text-[#0369A1] inline-block shadow-sm">
-                    Curso 2 • Método Inmersivo 🎬
+              {/* CURSO 2: GRINGO ACADEMY */}
+              <div className="bg-white rounded-[26px] p-5 shadow-[6px_8px_18px_rgba(210,190,175,0.18)] border-2 border-[#7DD3FC] flex flex-col justify-between space-y-4">
+                <div>
+                  <span className="text-[10px] uppercase font-black px-2.5 py-0.5 rounded-full bg-[#D4EBF8] text-[#0369A1]">
+                    Curso 2 · Hotmart Club
                   </span>
-                  <h2 className="text-base font-black text-[#3D352E]">Gringo Academy (Hotmart Club)</h2>
-                  <p className="text-xs text-[#6B5E55]">Telenovelas, episodios y entrenamiento auditivo continuo.</p>
+                  <h3 className="text-base font-black text-[#3D352E] mt-2">Gringo Academy</h3>
+                  <p className="text-xs text-[#6B5E55] leading-relaxed">
+                    Telenovelas, episodios contextuales y entrenamiento auditivo continuo.
+                  </p>
                 </div>
-                <div className="flex gap-2 shrink-0">
+
+                <div className="space-y-2 pt-2 border-t border-[#F3ECE1]">
+                  <div className="flex items-center justify-between text-xs font-black text-[#4A4139]">
+                    <span>Telenovela:</span>
+                    <span className="text-[#0369A1]">Bloque {curso2Capitulo} de 130</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="1"
+                    max="130"
+                    value={curso2Capitulo}
+                    onChange={e => setCurso2Capitulo(Number(e.target.value))}
+                    className="w-full accent-[#0284C7]"
+                  />
                   <a
                     href="https://consumer.hotmart.com"
                     target="_blank"
+                    rel="noopener noreferrer"
                     onClick={playPopSound}
-                    className="px-4 py-2 rounded-[18px] bg-[#38BDF8] hover:bg-[#0284C7] text-white font-black text-xs shadow-sm whitespace-nowrap"
+                    className="w-full py-2.5 rounded-[16px] bg-[#0284C7] text-white font-black text-xs block text-center shadow-sm"
                   >
                     🎬 Ver en Hotmart ↗
                   </a>
                 </div>
               </div>
 
-              <div className="pt-3 border-t border-[#F3E7DC] flex flex-wrap sm:flex-nowrap items-center gap-2.5">
-                <span className="text-xs font-bold text-[#6D635B] whitespace-nowrap">Telenovela / Bloque:</span>
-                <input
-                  type="number"
-                  min="1"
-                  max="130"
-                  value={gringoUnit}
-                  onChange={e => {
-                    playPopSound();
-                    setGringoUnit(Number(e.target.value));
-                  }}
-                  className="w-24 bg-[#F3ECE1] rounded-[20px] p-2.5 text-xs font-black text-[#3D352E] focus:outline-none shadow-inner"
-                />
-                <span className="text-xs text-[#8C7E72] font-semibold">de 130</span>
-                <div className="flex-1 hidden sm:block"></div>
-                <button
-                  onClick={() => {
-                    playChimeSound();
-                    setWaterDrops(prev => prev + 1);
-                    showSaveNotice(`Gringo Academy guardado en Telenovela ${gringoUnit}`);
-                  }}
-                  className="px-5 py-2.5 rounded-[18px] bg-[#38BDF8] hover:bg-[#0284C7] text-white font-black text-xs shadow-sm whitespace-nowrap ml-auto sm:ml-0"
-                >
-                  💾 Guardar Telenovela
-                </button>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-[28px] p-5 sm:p-6 space-y-4 border-2 border-[#DDD6FE] overflow-hidden shadow-[8px_10px_22px_rgba(210,190,175,0.22)]">
-              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-                <div className="space-y-1">
-                  <span className="text-[10px] uppercase font-black px-3 py-1 rounded-full bg-[#E6DCF5] text-[#5B21B6] inline-block shadow-sm">
-                    Curso 3 • Reprogramación Subconsciente 🧠
+              {/* CURSO 3: ACTIVACIÓN NEURAL */}
+              <div className="bg-white rounded-[26px] p-5 shadow-[6px_8px_18px_rgba(210,190,175,0.18)] border-2 border-[#D8B4FE] flex flex-col justify-between space-y-4">
+                <div>
+                  <span className="text-[10px] uppercase font-black px-2.5 py-0.5 rounded-full bg-[#F3E8FF] text-[#6B21A8]">
+                    Curso 3 · Audios Guiados
                   </span>
-                  <h2 className="text-base font-black text-[#3D352E]">Activación Neural: Audios & Subconsciente</h2>
-                  <p className="text-xs text-[#6B5E55]">Sesiones de audio guiadas y acondicionamiento auditivo profundo en Hotmart.</p>
+                  <h3 className="text-base font-black text-[#3D352E] mt-2">Activación Neural</h3>
+                  <p className="text-xs text-[#6B5E55] leading-relaxed">
+                    Reprogramación subconsciente y sesiones de acondicionamiento auditivo.
+                  </p>
                 </div>
-                <div className="flex gap-2 shrink-0">
+
+                <div className="space-y-2 pt-2 border-t border-[#F3ECE1]">
+                  <div className="flex items-center justify-between text-xs font-black text-[#4A4139]">
+                    <span>Fase Activa:</span>
+                    <span className="text-[#6B21A8]">Fase {curso3Fase} de 12</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="1"
+                    max="12"
+                    value={curso3Fase}
+                    onChange={e => setCurso3Fase(Number(e.target.value))}
+                    className="w-full accent-[#9333EA]"
+                  />
                   <a
                     href="https://consumer.hotmart.com"
                     target="_blank"
+                    rel="noopener noreferrer"
                     onClick={playPopSound}
-                    className="px-4 py-2 rounded-[18px] bg-[#A855F7] hover:bg-[#9333EA] text-white font-black text-xs shadow-sm whitespace-nowrap"
+                    className="w-full py-2.5 rounded-[16px] bg-[#9333EA] text-white font-black text-xs block text-center shadow-sm"
                   >
-                    🎧 Abrir en Hotmart ↗
+                    🎧 Abrir Audios ↗
                   </a>
                 </div>
-              </div>
-
-              <div className="pt-3 border-t border-[#F3E7DC] flex flex-wrap sm:flex-nowrap items-center gap-2.5">
-                <span className="text-xs font-bold text-[#6D635B] whitespace-nowrap">Módulo activo:</span>
-                <select
-                  value={neuralWeek}
-                  onChange={e => {
-                    playPopSound();
-                    setNeuralWeek(Number(e.target.value));
-                  }}
-                  className="flex-1 min-w-[180px] bg-[#F3ECE1] rounded-[20px] p-2.5 text-xs font-black text-[#3D352E] focus:outline-none shadow-inner"
-                >
-                  {Array.from({ length: 12 }, (_, i) => (
-                    <option key={i + 1} value={i + 1}>Fase {i + 1}: Reprogramación & Escucha Diaria</option>
-                  ))}
-                </select>
-                <button
-                  onClick={() => {
-                    playChimeSound();
-                    setWaterDrops(prev => prev + 1);
-                    showSaveNotice(`Activación Neural guardada en Fase ${neuralWeek}`);
-                  }}
-                  className="px-5 py-2.5 rounded-[18px] bg-[#A855F7] hover:bg-[#9333EA] text-white font-black text-xs shadow-sm whitespace-nowrap ml-auto sm:ml-0"
-                >
-                  💾 Guardar Fase
-                </button>
               </div>
             </div>
           </div>
